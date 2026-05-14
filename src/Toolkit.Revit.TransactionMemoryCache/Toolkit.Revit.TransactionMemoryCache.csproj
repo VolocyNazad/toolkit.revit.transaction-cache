@@ -1,12 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<PropertyGroup>
 		<Authors>VolocyNazad</Authors>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<Copyright>Copyright © VolocyNazad</Copyright>
 		<Description>Revit transaction cache management.</Description>
-		<PackageTags>revit;chache;transaction;</PackageTags>
-		<PackageId>VolocyNazad.Revit.TransactionCache</PackageId>
+		<PackageTags>revit;cache;transaction;</PackageTags>
+		<PackageId>VolocyNazad.Revit.TransactionMemoryCache</PackageId>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<!--<PackageIcon>logo_128x128.png</PackageIcon>-->
 		<PackageProjectUrl>https://github.com/VolocyNazad/toolkit.revit.transaction-cache</PackageProjectUrl>
@@ -23,22 +27,17 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
-		<UseWPF>true</UseWPF>
 		<Platforms>x64</Platforms>
-		<Configurations>
-			Debug 2021.1.4;Debug 2023.0.0;Debug 2025.0.0;
-			Release 2011.0.0;Release 2011.0.1;Release 2012.0.0;Release 2012.0.1;
-			Release 2013.0.0;Release 2013.0.1;Release 2014.0.0;Release 2014.0.1;
-			Release 2015.0.0;Release 2015.0.1;Release 2016.0.0;Release 2016.0.1;
-			Release 2016.0.2;Release 2017.0.0;Release 2017.0.1;Release 2017.0.2;
-			Release 2018.0.0;Release 2018.0.1;Release 2018.0.2;Release 2019.0.0;
-			Release 2019.0.1;Release 2020.0.0;Release 2020.0.1;Release 2021.0.0;
-			Release 2021.1.4;Release 2022.0.0;Release 2022.1.0;Release 2023.0.0;
-			Release 2024.0.0;Release 2024.2.0;Release 2025.0.0;Release 2026.0.0;
-		</Configurations>
+		<Configurations>Debug 2021.1.4;Debug 2021.1.9;Debug 2023.0.0;Debug 2025.0.0;Release 2011.0.0;Release 2011.0.1;Release 2012.0.0;Release 2012.0.1;Release 2013.0.0;Release 2013.0.1;Release 2014.0.0;Release 2014.0.1;Release 2015.0.0;Release 2015.0.1;Release 2016.0.0;Release 2016.0.1;Release 2016.0.2;Release 2017.0.0;Release 2017.0.1;Release 2017.0.2;Release 2018.0.0;Release 2018.0.1;Release 2018.0.2;Release 2019.0.0;Release 2019.0.1;Release 2020.0.0;Release 2020.0.1;Release 2021.0.0;Release 2021.1.4;Release 2021.1.9;Release 2022.0.0;Release 2022.1.0;Release 2023.0.0;Release 2024.0.0;Release 2024.2.0;Release 2025.0.0;Release 2026.0.0;Debug 2021.1.9</Configurations>
 		<RevitVersion>$(Configuration.Split(' ')[1])</RevitVersion>
 		<MajorVersion>$(RevitVersion.Split('.')[0])</MajorVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<ReleaseVersion>3</ReleaseVersion>
+		<AssemblyVersion>$(RevitVersion).$(ReleaseVersion)</AssemblyVersion>
+		<FileVersion>$(RevitVersion).$(ReleaseVersion)</FileVersion>
+		<Version>$(RevitVersion).$(ReleaseVersion)</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -142,22 +141,19 @@
 		<DebugSymbols>false</DebugSymbols>
 	</PropertyGroup>
 
-	<Target Name="RemoveRevitAPICopyLocal" AfterTargets="ResolveAssemblyReferences">
-		<ItemGroup>
-			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)' == 'RevitAPI' or '%(Filename)' == 'RevitAPIUI'" />
-		</ItemGroup>
-	</Target>
-
 	<ItemGroup>
-		<PackageReference Include="MinVer" Version="7.0.0">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
 		<PackageReference Include="PolySharp" Version="1.15">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="AutoConstructor" Version="5.6.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion)" />
+		<PackageReference Include="VolocyNazad.Revit.Context" Version="$(RevitVersion).3" />
 	</ItemGroup>
 
 </Project>

@@ -9,11 +9,4 @@
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<NoWarn>$(NoWarn);CS1591</NoWarn>
     </PropertyGroup>
-	<!-- MinVer properties -->
-	<PropertyGroup>
-		<MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
-		<MinVerAutoIncrement>minor</MinVerAutoIncrement>
-		<MinVerTagPrefix>v</MinVerTagPrefix>
-		<MinVerDefaultPreReleaseIdentifiers>dev.0</MinVerDefaultPreReleaseIdentifiers>
-	</PropertyGroup>
 </Project>

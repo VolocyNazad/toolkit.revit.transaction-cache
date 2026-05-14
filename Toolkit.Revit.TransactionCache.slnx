@@ -1,6 +1,7 @@
 <Solution>
   <Configurations>
     <BuildType Name="Debug 2021.1.4" />
+    <BuildType Name="Debug 2021.1.9" />
     <BuildType Name="Debug 2023.0.0" />
     <BuildType Name="Debug 2025.0.0" />
     <BuildType Name="Release 2011.0.0" />
@@ -28,6 +29,7 @@
     <BuildType Name="Release 2020.0.1" />
     <BuildType Name="Release 2021.0.0" />
     <BuildType Name="Release 2021.1.4" />
+    <BuildType Name="Release 2021.1.9" />
     <BuildType Name="Release 2022.0.0" />
     <BuildType Name="Release 2022.1.0" />
     <BuildType Name="Release 2023.0.0" />
@@ -38,10 +40,16 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/Solution Items/">
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="CHANGELOG.md" />
     <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
   </Folder>
   <Folder Name="/tests/" />
-  <Project Path="src/Toolkit.Revit.TransactionCache/Toolkit.Revit.TransactionCache.csproj">
+  <Project Path="src/Toolkit.Revit.TransactionMemoryCache/Toolkit.Revit.TransactionMemoryCache.csproj">
     <Platform Project="x64" />
   </Project>
 </Solution>
