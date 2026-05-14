@@ -34,7 +34,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<ReleaseVersion>3</ReleaseVersion>
+		<ReleaseVersion>4</ReleaseVersion>
 		<AssemblyVersion>$(RevitVersion).$(ReleaseVersion)</AssemblyVersion>
 		<FileVersion>$(RevitVersion).$(ReleaseVersion)</FileVersion>
 		<Version>$(RevitVersion).$(ReleaseVersion)</Version>
