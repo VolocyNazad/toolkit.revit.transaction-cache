@@ -9,12 +9,12 @@
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<Copyright>Copyright © VolocyNazad</Copyright>
 		<Description>Revit transaction cache management.</Description>
-		<PackageTags>revit;cache;transaction;</PackageTags>
+		<PackageTags>autodesk;revit;api;cache;transaction;</PackageTags>
 		<PackageId>VolocyNazad.Revit.TransactionMemoryCache</PackageId>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<!--<PackageIcon>logo_128x128.png</PackageIcon>-->
 		<PackageProjectUrl>https://github.com/VolocyNazad/toolkit.revit.transaction-cache</PackageProjectUrl>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageOutputPath>..\..\artifacts\</PackageOutputPath>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/VolocyNazad/toolkit.revit.transaction-cache</RepositoryUrl>
@@ -22,27 +22,38 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!--<None Include="..\..\logo_128x128.png" Pack="true" PackagePath="" Visible="false" />-->
+		<!--<None Include="..\..\.nuget\PackageIcon.png" PackagePath="images/" Pack="true" Visible="false"/>-->
 		<None Include="..\..\README.md" Pack="true" PackagePath="" Visible="false" />
+		<None Include="..\..\LICENSE.md" Pack="true" PackagePath="" Visible="false" />
 	</ItemGroup>
 
 	<PropertyGroup>
-		<Platforms>x64</Platforms>
-		<Configurations>Debug 2021.1.4;Debug 2021.1.9;Debug 2023.0.0;Debug 2025.0.0;Release 2011.0.0;Release 2011.0.1;Release 2012.0.0;Release 2012.0.1;Release 2013.0.0;Release 2013.0.1;Release 2014.0.0;Release 2014.0.1;Release 2015.0.0;Release 2015.0.1;Release 2016.0.0;Release 2016.0.1;Release 2016.0.2;Release 2017.0.0;Release 2017.0.1;Release 2017.0.2;Release 2018.0.0;Release 2018.0.1;Release 2018.0.2;Release 2019.0.0;Release 2019.0.1;Release 2020.0.0;Release 2020.0.1;Release 2021.0.0;Release 2021.1.4;Release 2021.1.9;Release 2022.0.0;Release 2022.1.0;Release 2023.0.0;Release 2024.0.0;Release 2024.2.0;Release 2025.0.0;Release 2026.0.0;Debug 2021.1.9</Configurations>
+		<UseWPF>true</UseWPF>
+		<Configurations>
+			Debug 2021.1.4;Debug 2021.1.9;Debug 2023.0.0;Debug 2025.0.0;
+			Release 2011.0.0;Release 2011.0.1;Release 2012.0.0;Release 2012.0.1;
+			Release 2013.0.0;Release 2013.0.1;Release 2014.0.0;Release 2014.0.1;
+			Release 2015.0.0;Release 2015.0.1;Release 2016.0.0;Release 2016.0.1;
+			Release 2016.0.2;Release 2017.0.0;Release 2017.0.1;Release 2017.0.2;
+			Release 2018.0.0;Release 2018.0.1;Release 2018.0.2;Release 2019.0.0;
+			Release 2019.0.1;Release 2020.0.0;Release 2020.0.1;Release 2021.0.0;
+			Release 2021.1.4;Release 2021.1.9;Release 2022.0.0;Release 2022.1.0;
+			Release 2023.0.0;Release 2024.0.0;Release 2024.2.0;Release 2025.0.0;
+			Release 2026.0.0;Release 2027.0.0;Release 2027.0.2
+		</Configurations>
 		<RevitVersion>$(Configuration.Split(' ')[1])</RevitVersion>
-		<MajorVersion>$(RevitVersion.Split('.')[0])</MajorVersion>
+		<MajorRevitVersion>$(RevitVersion.Split('.')[0])</MajorRevitVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<ReleaseVersion>4</ReleaseVersion>
-		<AssemblyVersion>$(RevitVersion).$(ReleaseVersion)</AssemblyVersion>
-		<FileVersion>$(RevitVersion).$(ReleaseVersion)</FileVersion>
-		<Version>$(RevitVersion).$(ReleaseVersion)</Version>
+		<AssemblyVersion>$(MajorRevitVersion).0.5</AssemblyVersion>
+		<FileVersion>$(MajorRevitVersion).0.5</FileVersion>
+		<Version>$(MajorRevitVersion).0.5</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<IsNet8 Condition="'$(MajorVersion)' == '2025'">true</IsNet8>
-		<IsNet8 Condition="'$(MajorVersion)' == '2026'">true</IsNet8>
+		<IsNet8 Condition="'$(MajorRevitVersion)' == '2025'">true</IsNet8>
+		<IsNet8 Condition="'$(MajorRevitVersion)' == '2026'">true</IsNet8>
 		<IsNet8 Condition="'$(IsNet8)' == ''">false</IsNet8>
 	</PropertyGroup>
 
@@ -62,61 +73,61 @@
 	<!-- Автоматически генерируем констант для всех версий -->
 	<PropertyGroup>
 		<!-- Базовые константы -->
-		<DefineConstants Condition="'$(MajorVersion)' != ''">VERSION_$(MajorVersion)</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != ''">VERSION_$(MajorRevitVersion)</DefineConstants>
 
 		<!-- IS константы для конкретных годов -->
-		<DefineConstants Condition="'$(MajorVersion)' == '2011'">$(DefineConstants);IS2011</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2012'">$(DefineConstants);IS2012</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2013'">$(DefineConstants);IS2013</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2014'">$(DefineConstants);IS2014</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2015'">$(DefineConstants);IS2015</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2016'">$(DefineConstants);IS2016</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2017'">$(DefineConstants);IS2017</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2018'">$(DefineConstants);IS2018</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2019'">$(DefineConstants);IS2019</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2020'">$(DefineConstants);IS2020</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2021'">$(DefineConstants);IS2021</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2022'">$(DefineConstants);IS2022</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2023'">$(DefineConstants);IS2023</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2024'">$(DefineConstants);IS2024</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2025'">$(DefineConstants);IS2025</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' == '2026'">$(DefineConstants);IS2026</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2011'">$(DefineConstants);IS2011</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2012'">$(DefineConstants);IS2012</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2013'">$(DefineConstants);IS2013</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2014'">$(DefineConstants);IS2014</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2015'">$(DefineConstants);IS2015</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2016'">$(DefineConstants);IS2016</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2017'">$(DefineConstants);IS2017</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2018'">$(DefineConstants);IS2018</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2019'">$(DefineConstants);IS2019</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2020'">$(DefineConstants);IS2020</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2021'">$(DefineConstants);IS2021</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2022'">$(DefineConstants);IS2022</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2023'">$(DefineConstants);IS2023</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2024'">$(DefineConstants);IS2024</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2025'">$(DefineConstants);IS2025</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' == '2026'">$(DefineConstants);IS2026</DefineConstants>
 
 		<!-- BEFORE константы для всех годов -->
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2012">$(DefineConstants);BEFORE2012</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2013">$(DefineConstants);BEFORE2013</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2014">$(DefineConstants);BEFORE2014</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2015">$(DefineConstants);BEFORE2015</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2016">$(DefineConstants);BEFORE2016</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2017">$(DefineConstants);BEFORE2017</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2018">$(DefineConstants);BEFORE2018</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2019">$(DefineConstants);BEFORE2019</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2020">$(DefineConstants);BEFORE2020</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2021">$(DefineConstants);BEFORE2021</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2022">$(DefineConstants);BEFORE2022</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2023">$(DefineConstants);BEFORE2023</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2024">$(DefineConstants);BEFORE2024</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2025">$(DefineConstants);BEFORE2025</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2026">$(DefineConstants);BEFORE2026</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &lt;= 2027">$(DefineConstants);BEFORE2027</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2012">$(DefineConstants);BEFORE2012</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2013">$(DefineConstants);BEFORE2013</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2014">$(DefineConstants);BEFORE2014</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2015">$(DefineConstants);BEFORE2015</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2016">$(DefineConstants);BEFORE2016</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2017">$(DefineConstants);BEFORE2017</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2018">$(DefineConstants);BEFORE2018</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2019">$(DefineConstants);BEFORE2019</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2020">$(DefineConstants);BEFORE2020</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2021">$(DefineConstants);BEFORE2021</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2022">$(DefineConstants);BEFORE2022</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2023">$(DefineConstants);BEFORE2023</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2024">$(DefineConstants);BEFORE2024</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2025">$(DefineConstants);BEFORE2025</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2026">$(DefineConstants);BEFORE2026</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &lt;= 2027">$(DefineConstants);BEFORE2027</DefineConstants>
 
 		<!-- AFTER константы для всех версий -->
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2011">$(DefineConstants);AFTER2011</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2012">$(DefineConstants);AFTER2012</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2013">$(DefineConstants);AFTER2013</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2014">$(DefineConstants);AFTER2014</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2015">$(DefineConstants);AFTER2015</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2016">$(DefineConstants);AFTER2016</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2017">$(DefineConstants);AFTER2017</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2018">$(DefineConstants);AFTER2018</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2019">$(DefineConstants);AFTER2019</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2020">$(DefineConstants);AFTER2020</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2021">$(DefineConstants);AFTER2021</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2022">$(DefineConstants);AFTER2022</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2023">$(DefineConstants);AFTER2023</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2024">$(DefineConstants);AFTER2024</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2025">$(DefineConstants);AFTER2025</DefineConstants>
-		<DefineConstants Condition="'$(MajorVersion)' != '' and $(MajorVersion) &gt;= 2026">$(DefineConstants);AFTER2026</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2011">$(DefineConstants);AFTER2011</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2012">$(DefineConstants);AFTER2012</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2013">$(DefineConstants);AFTER2013</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2014">$(DefineConstants);AFTER2014</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2015">$(DefineConstants);AFTER2015</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2016">$(DefineConstants);AFTER2016</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2017">$(DefineConstants);AFTER2017</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2018">$(DefineConstants);AFTER2018</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2019">$(DefineConstants);AFTER2019</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2020">$(DefineConstants);AFTER2020</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2021">$(DefineConstants);AFTER2021</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2022">$(DefineConstants);AFTER2022</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2023">$(DefineConstants);AFTER2023</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2024">$(DefineConstants);AFTER2024</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2025">$(DefineConstants);AFTER2025</DefineConstants>
+		<DefineConstants Condition="'$(MajorRevitVersion)' != '' and $(MajorRevitVersion) &gt;= 2026">$(DefineConstants);AFTER2026</DefineConstants>
 
 		<!-- Константы для типа конфигурации -->
 		<DefineConstants Condition="$(Configuration.StartsWith('Debug'))">$(DefineConstants);DEBUG</DefineConstants>
@@ -127,7 +138,7 @@
 	<Target Condition="'$(IsDebug)' == 'true'" Name="PrintDefines" AfterTargets="Build">
 		<Message Text="=== Configuration Info ===" Importance="high" />
 		<Message Text="Configuration: $(Configuration)" Importance="high" />
-		<Message Text="MajorVersion: $(MajorVersion)" Importance="high" />
+		<Message Text="MajorRevitVersion: $(MajorRevitVersion)" Importance="high" />
 		<Message Text="DefineConstants: $(DefineConstants)" Importance="high" />
 	</Target>
 
@@ -153,7 +164,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion)" />
-		<PackageReference Include="VolocyNazad.Revit.Context" Version="$(RevitVersion).4" />
+		<PackageReference Include="VolocyNazad.Revit.Context" Version="$(MajorRevitVersion).0.5" />
 	</ItemGroup>
 
 </Project>
