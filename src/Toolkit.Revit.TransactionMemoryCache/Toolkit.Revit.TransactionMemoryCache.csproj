@@ -12,6 +12,7 @@
 		<PackageTags>autodesk;revit;api;cache;transaction;</PackageTags>
 		<PackageId>VolocyNazad.Revit.TransactionMemoryCache</PackageId>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageType>Dependency</PackageType>
 		<!--<PackageIcon>logo_128x128.png</PackageIcon>-->
 		<PackageProjectUrl>https://github.com/VolocyNazad/toolkit.revit.transaction-cache</PackageProjectUrl>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
