@@ -39,6 +39,7 @@
     <BuildType Name="Release 2026.0.0" />
     <BuildType Name="Release 2027.0.0" />
     <BuildType Name="Release 2027.0.2" />
+    <Platform Name="x64" />
   </Configurations>
   <Folder Name="/Solution Items/">
     <File Path=".gitattributes" />
@@ -50,5 +51,7 @@
     <File Path="LICENSE.md" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="src/Toolkit.Revit.TransactionMemoryCache/Toolkit.Revit.TransactionMemoryCache.csproj" />
+  <Project Path="src/Revit.TransactionMemoryCache/Revit.TransactionMemoryCache.csproj">
+    <Platform Project="x64" />
+  </Project>
 </Solution>
