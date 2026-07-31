@@ -57,6 +57,7 @@
 	<PropertyGroup>
 		<IsNet8 Condition="'$(MajorRevitVersion)' == '2025'">true</IsNet8>
 		<IsNet8 Condition="'$(MajorRevitVersion)' == '2026'">true</IsNet8>
+		<IsNet8 Condition="'$(MajorRevitVersion)' == '2027'">true</IsNet8>
 		<IsNet8 Condition="'$(IsNet8)' == ''">false</IsNet8>
 	</PropertyGroup>
 
