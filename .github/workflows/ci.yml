@@ -17,6 +17,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v4
     - name: Execute build and run tests
@@ -29,6 +31,7 @@ jobs:
         name: VolocyNazad.Revit.TransactionMemoryCache
         path: artifacts/*
     - name: Publish NuGet package
+      if: github.event_name == 'push'
       run: |
         foreach($file in (Get-ChildItem "artifacts/" -Recurse -Include *.nupkg)) {
             dotnet nuget push $file --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
