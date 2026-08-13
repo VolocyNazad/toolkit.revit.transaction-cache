@@ -41,7 +41,7 @@
     <BuildType Name="Release_2027.0.2" />
     <Platform Name="x64" />
   </Configurations>
-  <Folder Name="/Solution Items/">
+  <Folder Name="/solutionItems/">
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
     <File Path="CHANGELOG.md" />
@@ -50,6 +50,11 @@
     <File Path="global.json" />
     <File Path="LICENSE.md" />
     <File Path="README.md" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Revit.TransactionMemoryCache.Tests/Revit.TransactionMemoryCache.Tests.csproj">
+      <Platform Project="x64" />
+    </Project>
   </Folder>
   <Project Path="src/Revit.TransactionMemoryCache/Revit.TransactionMemoryCache.csproj">
     <Platform Project="x64" />

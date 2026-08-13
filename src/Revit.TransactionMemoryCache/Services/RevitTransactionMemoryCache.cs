@@ -1,4 +1,5 @@
-﻿using Autodesk.Revit.DB.Events;
+﻿using System.Runtime.CompilerServices;
+using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI.Events;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
@@ -49,8 +50,7 @@ internal sealed class RevitTransactionMemoryCache(IRevitContext revitContext, IM
             ThrowIfDisposed();
             if (_isInitialized) return;
 
-            revitContext.ControlledApplication!.DocumentChanged += OnDocumentChanged;
-            revitContext.UIControlledApplication!.ViewActivated += OnViewActivated;
+            SubscribeToRevitEvents();
             _isInitialized = true;
         }
     }
@@ -93,9 +93,28 @@ internal sealed class RevitTransactionMemoryCache(IRevitContext revitContext, IM
     private void DeinitializeCore() {
         if (!_isInitialized) return;
 
+        UnsubscribeFromRevitEvents();
+        _isInitialized = false;
+    }
+
+    /// <summary>
+    /// Touches Revit-typed members (<c>ControlledApplication</c>/<c>UIControlledApplication</c>), which forces the CLR
+    /// to resolve RevitAPI/RevitAPIUI on first invocation. Kept in its own <see cref="MethodImplOptions.NoInlining"/>
+    /// method (and only ever called from behind the <c>_isInitialized</c> guard) so that <see cref="Initialize"/> and
+    /// <see cref="DeinitializeCore"/> themselves stay free of Revit type references and remain JIT-compilable — and
+    /// therefore callable/disposable — outside a real Revit process (e.g. in unit tests that never call <see cref="Initialize"/>).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void SubscribeToRevitEvents() {
+        revitContext.ControlledApplication!.DocumentChanged += OnDocumentChanged;
+        revitContext.UIControlledApplication!.ViewActivated += OnViewActivated;
+    }
+
+    /// <summary>See <see cref="SubscribeToRevitEvents"/> — same rationale applies to unsubscription.</summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void UnsubscribeFromRevitEvents() {
         revitContext.ControlledApplication!.DocumentChanged -= OnDocumentChanged;
         revitContext.UIControlledApplication!.ViewActivated -= OnViewActivated;
-        _isInitialized = false;
     }
 
     /// <summary>Throws <see cref="ObjectDisposedException"/> if the cache has already been disposed.</summary>
