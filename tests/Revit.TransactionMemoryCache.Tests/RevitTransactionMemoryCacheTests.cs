@@ -2,10 +2,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Revit.Context.DI;
 using Revit.TransactionMemoryCache.Abstractions.Services;
 using Revit.TransactionMemoryCache.DI;
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace Revit.TransactionMemoryCache.Tests;
 
+[SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
+    Justification = "xUnit test naming convention: MethodName_Scenario_ExpectedResult.")]
 public class RevitTransactionMemoryCacheTests
 {
     [Fact]
