@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Configurations>
     <BuildType Name="Debug_2021.1.4" />
     <BuildType Name="Debug_2021.1.9" />
@@ -56,8 +56,24 @@
     <Project Path="tests/Revit.TransactionMemoryCache.Tests/Revit.TransactionMemoryCache.Tests.csproj">
       <Platform Project="x64" />
     </Project>
+    <Project Path="tests/Revit.TransactionMemoryCache.RevitTests/Revit.TransactionMemoryCache.RevitTests.csproj">
+      <Platform Project="x64" />
+    </Project>
   </Folder>
-  <Project Path="src/Revit.TransactionMemoryCache/Revit.TransactionMemoryCache.csproj">
-    <Platform Project="x64" />
-  </Project>
+  <Folder Name="/src/">
+    <Project Path="src/Revit.TransactionMemoryCache/Revit.TransactionMemoryCache.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/analyzers/">
+    <Project Path="analyzers/Revit.TransactionMemoryCache.Analyzers/Revit.TransactionMemoryCache.Analyzers.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="analyzers/Revit.TransactionMemoryCache.Analyzers.CodeFixes/Revit.TransactionMemoryCache.Analyzers.CodeFixes.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="analyzers/Revit.TransactionMemoryCache.Analyzers.Tests/Revit.TransactionMemoryCache.Analyzers.Tests.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
 </Solution>
