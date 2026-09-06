@@ -67,7 +67,13 @@ jobs:
     - name: Execute build and run tests
       run: |
         dotnet build --configuration "${{ matrix.configuration }}" /nologo
-        dotnet test --configuration "${{ matrix.configuration }}"
+
+        # Revit.TransactionMemoryCache.RevitTests is deliberately excluded here: it's built above
+        # (verifying it compiles against every Revit version), but it needs a real, licensed, running
+        # Revit process to execute (Nice3point.TUnit.Revit's RevitApiTest) - not available on a
+        # standard GitHub-hosted runner. Only the headless test projects run here.
+        dotnet test --configuration "${{ matrix.configuration }}" --project tests/Revit.TransactionMemoryCache.Tests/Revit.TransactionMemoryCache.Tests.csproj
+        dotnet test --configuration "${{ matrix.configuration }}" --project analyzers/Revit.TransactionMemoryCache.Analyzers.Tests/Revit.TransactionMemoryCache.Analyzers.Tests.csproj
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
