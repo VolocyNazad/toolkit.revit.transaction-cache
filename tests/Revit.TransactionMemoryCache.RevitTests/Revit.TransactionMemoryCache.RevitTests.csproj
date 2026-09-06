@@ -1,0 +1,30 @@
+﻿<Project Sdk="VolocyNazad.Revit.Sdk/1.0.44">
+	<PropertyGroup>
+		<Platform>x64</Platform>
+		<OutputType>Exe</OutputType>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<NoWarn>CS1591</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup>
+		<Configurations>
+			Debug_2021.1.4;Debug_2021.1.9;Debug_2023.0.0;Debug_2025.0.0;
+			Release_2011.0.0;Release_2011.0.1;Release_2012.0.0;Release_2012.0.1;
+			Release_2013.0.0;Release_2013.0.1;Release_2014.0.0;Release_2014.0.1;
+			Release_2015.0.0;Release_2015.0.1;Release_2016.0.0;Release_2016.0.1;
+			Release_2016.0.2;Release_2017.0.0;Release_2017.0.1;Release_2017.0.2;
+			Release_2018.0.0;Release_2018.0.1;Release_2018.0.2;Release_2019.0.0;
+			Release_2019.0.1;Release_2020.0.0;Release_2020.0.1;Release_2021.0.0;
+			Release_2021.1.4;Release_2021.1.9;Release_2022.0.0;Release_2022.1.0;
+			Release_2023.0.0;Release_2024.0.0;Release_2024.2.0;Release_2025.0.0;
+			Release_2026.0.0;Release_2027.0.0;Release_2027.0.2
+		</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Nice3point.TUnit.Revit" Version="$(MajorRevitVersion).1.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Revit.TransactionMemoryCache\Revit.TransactionMemoryCache.csproj" />
+	</ItemGroup>
+</Project>
