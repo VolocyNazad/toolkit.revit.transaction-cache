@@ -5,14 +5,4 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Platforms>x64</Platforms>
     </PropertyGroup>
-
-    <!--
-        CI's "dotnet test" started failing under the .NET 10 SDK with "Testing with VSTest target is no
-        longer supported by Microsoft.Testing.Platform" for every Microsoft.Testing.Platform-based test
-        project (xunit.v3, TUnit) - this opts back into the VSTest-bridge "dotnet test" experience.
-        https://aka.ms/dotnet-test-mtp-error
-    -->
-    <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    </PropertyGroup>
 </Project>
