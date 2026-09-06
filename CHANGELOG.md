@@ -39,6 +39,15 @@ in `Revit.TransactionMemoryCache.csproj`).
   `epsilon`) and for shared/project parameters (`ElementId parameterId`
   instead of `BuiltInParameter`) - covers all four `Parameter.StorageType`
   values and both built-in and non-built-in parameters.
+- Filter inversion: `NotOfCategory`/`NotOfCategories` (once-only, a
+  separate slot from `OfCategory`/`OfCategories` - composable with them)
+  and `WhereParameterNotEquals` (mirrors every `WhereParameterEquals`
+  overload, same unrestricted call-any-number-of-times behaviour).
+  RTMC002 covers the new `NotOfCategory`/`NotOfCategories` conflict group.
+- `NotOfClass`/`NotOf<T>` - same inversion pattern for the class filter
+  (`ElementClassFilter` with `inverted: true`), once-only in its own
+  slot, composable with `OfClass`/`Of<T>`. RTMC002 covers this conflict
+  group too.
 
 ### Changed
 

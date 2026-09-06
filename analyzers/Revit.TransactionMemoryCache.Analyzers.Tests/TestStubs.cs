@@ -10,9 +10,14 @@ internal static class TestStubs
             {
                 public CachedElementCollector OfClass(System.Type elementClass) => this;
                 public CachedElementCollector Of<TElement>() => this;
+                public CachedElementCollector NotOfClass(System.Type elementClass) => this;
+                public CachedElementCollector NotOf<TElement>() => this;
                 public CachedElementCollector OfCategory(int category) => this;
                 public CachedElementCollector OfCategories(System.Collections.Generic.IEnumerable<int> categories) => this;
+                public CachedElementCollector NotOfCategory(int category) => this;
+                public CachedElementCollector NotOfCategories(System.Collections.Generic.IEnumerable<int> categories) => this;
                 public CachedElementCollector WhereParameterEquals(int parameter, int value) => this;
+                public CachedElementCollector WhereParameterNotEquals(int parameter, int value) => this;
                 public CachedElementCollector WhereElementIsElementType() => this;
                 public CachedElementCollector WhereElementIsNotElementType() => this;
                 public CachedElementCollector Excluding(System.Collections.Generic.ICollection<int> elementIds) => this;

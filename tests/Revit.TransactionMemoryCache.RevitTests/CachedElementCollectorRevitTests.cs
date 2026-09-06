@@ -70,6 +70,42 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     }
 
     [Test]
+    public async Task NotOfClass_ExcludesMatchingClass()
+    {
+        var elementIds = CreateCollector()
+            .NotOfClass(typeof(Wall))
+            .WhereElementIsNotElementType()
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsFalse();
+        await Assert.That(elementIds.Contains(_level!.Id)).IsTrue();
+    }
+
+    [Test]
+    public async Task NotOf_Generic_ExcludesMatchingClass()
+    {
+        var elementIds = CreateCollector()
+            .NotOf<Wall>()
+            .WhereElementIsNotElementType()
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsFalse();
+        await Assert.That(elementIds.Contains(_level!.Id)).IsTrue();
+    }
+
+    /// <summary>OfClass and NotOfClass are independent, composable quick filters, not the same slot.</summary>
+    [Test]
+    public async Task OfClass_CombinedWithNotOfClass_DoesNotThrow()
+    {
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .NotOfClass(typeof(Floor))
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsTrue();
+    }
+
+    [Test]
     public async Task OfCategory_FiltersToMatchingCategoryOnly()
     {
         var elementIds = CreateCollector().OfCategory(BuiltInCategory.OST_Walls).ToElementIds();
@@ -154,6 +190,71 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     }
 
     [Test]
+    public async Task NotOfCategory_ExcludesMatchingCategory()
+    {
+        var elementIds = CreateCollector()
+            .NotOfCategory(BuiltInCategory.OST_Levels)
+            .WhereElementIsNotElementType()
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsTrue();
+        await Assert.That(elementIds.Contains(_level!.Id)).IsFalse();
+    }
+
+    [Test]
+    public async Task NotOfCategories_ExcludesMatchingCategories()
+    {
+        var elementIds = CreateCollector()
+            .NotOfCategories([BuiltInCategory.OST_Levels, BuiltInCategory.OST_Grids])
+            .WhereElementIsNotElementType()
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsTrue();
+        await Assert.That(elementIds.Contains(_level!.Id)).IsFalse();
+    }
+
+    /// <summary>OfCategory and NotOfCategory are independent, composable quick filters, not the same slot.</summary>
+    [Test]
+    public async Task OfCategory_CombinedWithNotOfCategory_DoesNotThrow()
+    {
+        var elementIds = CreateCollector()
+            .OfCategory(BuiltInCategory.OST_Walls)
+            .NotOfCategory(BuiltInCategory.OST_Levels)
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsTrue();
+    }
+
+    [Test]
+    public async Task WhereParameterNotEquals_String_ExcludesMatchingElement()
+    {
+        using (Transaction transaction = new(_document!, "Set comment"))
+        {
+            transaction.Start();
+            _wall!.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set("checked");
+            transaction.Commit();
+        }
+
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .WhereParameterNotEquals(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS, "checked")
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall.Id)).IsFalse();
+    }
+
+    [Test]
+    public async Task WhereParameterNotEquals_ElementId_ExcludesMatchingElement()
+    {
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .WhereParameterNotEquals(BuiltInParameter.WALL_BASE_CONSTRAINT, _level!.Id)
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsFalse();
+    }
+
+    [Test]
     public async Task WhereElementIsElementType_ExcludesWallInstance()
     {
         var elementIds = CreateCollector().OfClass(typeof(Wall)).WhereElementIsElementType().ToElementIds();
@@ -225,6 +326,30 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     }
 
     [Test]
+    public async Task NotOfClass_CalledTwice_Throws()
+    {
+        var collector = CreateCollector().NotOfClass(typeof(Wall));
+
+        await AssertThrows<InvalidOperationException>(() => collector.NotOfClass(typeof(Floor))).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task NotOfClass_NullElementClass_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(() => collector.NotOfClass(null!)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task NotOf_Generic_CalledAfterNotOfClass_Throws()
+    {
+        var collector = CreateCollector().NotOfClass(typeof(Wall));
+
+        await AssertThrows<InvalidOperationException>(() => collector.NotOf<Floor>()).ConfigureAwait(false);
+    }
+
+    [Test]
     public async Task OfCategory_CalledTwice_Throws()
     {
         var collector = CreateCollector().OfCategory(BuiltInCategory.OST_Walls);
@@ -289,6 +414,56 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
 
         await AssertThrows<ArgumentNullException>(
             () => collector.WhereParameterEquals((ElementId)null!, 1)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task NotOfCategory_CalledTwice_Throws()
+    {
+        var collector = CreateCollector().NotOfCategory(BuiltInCategory.OST_Walls);
+
+        await AssertThrows<InvalidOperationException>(() => collector.NotOfCategory(BuiltInCategory.OST_Floors)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task NotOfCategory_ThenNotOfCategories_Throws()
+    {
+        var collector = CreateCollector().NotOfCategory(BuiltInCategory.OST_Walls);
+
+        await AssertThrows<InvalidOperationException>(() => collector.NotOfCategories([BuiltInCategory.OST_Floors])).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task NotOfCategories_NullCategories_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(() => collector.NotOfCategories(null!)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task NotOfCategories_EmptyCategories_ThrowsArgumentException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentException>(() => collector.NotOfCategories([])).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task WhereParameterNotEquals_NullStringValue_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(
+            () => collector.WhereParameterNotEquals(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS, (string)null!)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task WhereParameterNotEquals_NullParameterId_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(
+            () => collector.WhereParameterNotEquals((ElementId)null!, 1)).ConfigureAwait(false);
     }
 
     [Test]

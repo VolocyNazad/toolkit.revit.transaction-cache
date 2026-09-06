@@ -94,14 +94,17 @@ public sealed class MyService(ICachedElementCollectorFactory collectorFactory)
 **Ключевые правила:**
 
 - `OfClass`/`Of<T>`, `OfCategory`, `Excluding` можно вызвать **не более одного раза** за цепочку; `WhereElementIsElementType`/`WhereElementIsNotElementType` — взаимоисключающие. Нарушение бросает `InvalidOperationException` сразу же, не дожидаясь промаха кэша. Аналог этой проверки на этапе компиляции — анализатор `RTMC002` (Error).
+- `NotOfClass`/`NotOf<T>` — инвертированная версия `OfClass`/`Of<T>` (`ElementClassFilter` с `inverted: true`): элементы, **не относящиеся** к классу. Once-only между собой (свой "слот", отдельный от `OfClass`/`Of<T>`), но **можно комбинировать** с `OfClass`/`Of<T>` в одной цепочке — независимые quick-фильтры, как и с категориями.
 - Порядок fluent-вызовов **не влияет** на ключ кэша — фрагменты канонизируются (сортируются) перед склейкой, так что `OfClass(...).Excluding(...)` и `Excluding(...).OfClass(...)` — один и тот же ключ.
 - Результат `ToElements()`/`ToElementIds()` — **общий** для всех вызывающих с эквивалентной цепочкой. Не приводите его к изменяемому типу (`List<T>`, массив) и не мутируйте — это молча испортит закэшированное значение для всех остальных. Анализатор `RTMC001` (Warning) ловит такой каст на месте вызова и предлагает code fix — заменить на `.ToList()`/`.ToArray()` (создаёт копию).
 - `WherePasses(ElementFilter)` **намеренно не поддерживается** — у большинства подклассов `ElementFilter` нет надёжного value equality, чтобы строить по ним детерминированный ключ кэша. Вместо этого — узкие fluent-обёртки под конкретные value-типы параметров:
   - `OfCategories(IEnumerable<BuiltInCategory>)` — аналог `OfCategory`, но для нескольких категорий сразу (`ElementMulticategoryFilter`). Как и `OfCategory`, вызывается не более одного раза за цепочку, и конфликтует с `OfCategory` (это один и тот же "слот" под категорию).
+  - `NotOfCategory(BuiltInCategory)` / `NotOfCategories(IEnumerable<BuiltInCategory>)` — инвертированные версии (`ElementCategoryFilter`/`ElementMulticategoryFilter` с `inverted: true`): элементы, **не принадлежащие** категории/категориям. Once-only между собой (свой "слот", отдельный от `OfCategory`/`OfCategories`), но **можно комбинировать** с `OfCategory`/`OfCategories` в одной цепочке — это независимые quick-фильтры, а не альтернативные способы выразить одно и то же.
   - `WhereParameterEquals(BuiltInParameter, ...)` / `WhereParameterEquals(ElementId parameterId, ...)` — фильтр по значению параметра (`ElementParameterFilter`/`ParameterFilterRuleFactory.CreateEqualsRule`). В отличие от остальных fluent-методов, **можно вызывать сколько угодно раз** за цепочку — каждый вызов сужает результат (аналогично нескольким `WherePasses` подряд на `FilteredElementCollector`). Покрывает все 4 `Parameter.StorageType`:
     - `int`, `string` (регистронезависимо), `ElementId` — без допущений;
     - `double` — только с явным `epsilon` (`WhereParameterEquals(parameter, value, epsilon)`), т.к. точное сравнение `double` почти никогда не то, что нужно, а разумная погрешность зависит от единиц измерения параметра (длина/площадь/угол).
     - Перегрузка с `ElementId parameterId` вместо `BuiltInParameter` — для shared/project-параметров, у которых нет `BuiltInParameter` (например, `SharedParameterElement.Id`).
+  - `WhereParameterNotEquals(...)` — те же перегрузки, что и `WhereParameterEquals`, но инвертированные (`ElementParameterFilter` с `inverted: true`). Так же не ограничен по числу вызовов.
 
 ## Известные ограничения
 
