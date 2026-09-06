@@ -2,6 +2,8 @@
 using System.Runtime.CompilerServices;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.DB.Mechanical;
 using Nice3point.TUnit.Revit;
 using Nice3point.TUnit.Revit.Executors;
 using Revit.TransactionMemoryCache.Abstractions.Services;
@@ -12,7 +14,7 @@ namespace Revit.TransactionMemoryCache.RevitTests;
 
 /// <summary>
 /// Integration tests for <see cref="CachedElementCollector"/> and <see cref="CachedElementCollectorFactory"/>
-/// running inside a live Revit process, against a real <see cref="Document"/>/<see cref="FilteredElementCollector"/>.
+/// running inside a live Revit process, against a real <see cref="Document"/>/<see cref="Autodesk.Revit.DB.FilteredElementCollector"/>.
 /// Uses a hand-written in-memory <see cref="IRevitTransactionMemoryCache"/> (<see cref="TestRevitTransactionMemoryCache"/>)
 /// rather than the real event-driven <c>RevitTransactionMemoryCache</c>, since wiring up real automatic
 /// invalidation requires <c>IRevitContextInitializer.Initialize(UIControlledApplication)</c>, which isn't
@@ -21,7 +23,7 @@ namespace Revit.TransactionMemoryCache.RevitTests;
 /// actual element creation/filtering/exclusion and caching (same-instance-on-hit) semantics, plus the
 /// once-only/mutual-exclusion validation that <c>CachedElementCollectorTests</c> (headless) could not cover -
 /// merely loading <see cref="CachedElementCollector"/> forces the CLR to resolve its <see cref="Document"/>/
-/// <see cref="FilteredElementCollector"/>-typed fields, which fails outside a live Revit process.
+/// <see cref="Autodesk.Revit.DB.FilteredElementCollector"/>-typed fields, which fails outside a live Revit process.
 /// </summary>
 [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
     Justification = "xUnit test naming convention: MethodName_Scenario_ExpectedResult.")]
@@ -30,6 +32,8 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     private Document? _document;
     private Wall? _wall;
     private Level? _level;
+    private Room? _room;
+    private Space? _space;
     private IRevitTransactionMemoryCache _cache = null!;
 
     [Before(Test)]
@@ -37,16 +41,50 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
         Justification = "The Document is assigned to a field and disposed in CloseModel() " +
                          "([After(Test)]) - the analyzer can't see disposal across methods.")]
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types",
+        Justification = "Room/Space creation is environment-dependent (e.g. Space needs Space and Zone " +
+                         "settings initialized) - a failure there must not roll back the Level/Wall seeded " +
+                         "in the first transaction and break every other, unrelated test.")]
     public void CreateModel()
     {
         _document = Application.NewProjectDocument(UnitSystem.Metric);
         _cache = new TestRevitTransactionMemoryCache();
 
-        using Transaction transaction = new(_document, "Seed CachedElementCollector tests");
-        transaction.Start();
-        _level = Level.Create(_document, 0);
-        _wall = Wall.Create(_document, Line.CreateBound(XYZ.Zero, new XYZ(10, 0, 0)), _level.Id, false);
-        transaction.Commit();
+        using (Transaction transaction = new(_document, "Seed CachedElementCollector tests"))
+        {
+            transaction.Start();
+            _level = Level.Create(_document, 0);
+            _wall = Wall.Create(_document, Line.CreateBound(XYZ.Zero, new XYZ(10, 0, 0)), _level.Id, false);
+            transaction.Commit();
+        }
+
+        // Room/Space creation is kept in its own transaction, deliberately isolated from the one above: if
+        // either fails in this environment, it must not undo the Level/Wall that every other test depends on.
+        // Transaction.Commit() does NOT throw on failure - it returns a TransactionStatus and silently rolls
+        // back, so a failed commit here must be detected from the return value, not from a caught exception
+        // (an exception is still possible from the NewRoom/NewSpace calls themselves, so both are handled).
+        using (Transaction spatialTransaction = new(_document, "Seed CachedElementCollector spatial elements"))
+        {
+            spatialTransaction.Start();
+            var spatialElementsCreated = false;
+            try
+            {
+                _room = _document.Create.NewRoom(_level, new UV(5, 5));
+                _space = _document.Create.NewSpace(_level, new UV(5, 5));
+                spatialElementsCreated = spatialTransaction.Commit() == TransactionStatus.Committed;
+            }
+            catch (Exception)
+            {
+                if (spatialTransaction.GetStatus() == TransactionStatus.Started)
+                    spatialTransaction.RollBack();
+            }
+
+            if (!spatialElementsCreated)
+            {
+                _room = null;
+                _space = null;
+            }
+        }
     }
 
     [After(Test)]
@@ -276,6 +314,56 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
         var elementIds = CreateCollector().OfClass(typeof(Wall)).Excluding([_wall!.Id]).ToElementIds();
 
         await Assert.That(elementIds.Contains(_wall.Id)).IsFalse();
+    }
+
+    [Test]
+    public async Task WhereIsRoom_ReturnsCreatedRoom()
+    {
+        // Room creation isn't guaranteed to succeed in every environment (see CreateModel) - nothing to
+        // verify against RoomFilter if it didn't.
+        if (_room is null) return;
+
+        var elementIds = CreateCollector().WhereIsRoom().ToElementIds();
+
+        await Assert.That(elementIds.Contains(_room.Id)).IsTrue();
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsFalse();
+    }
+
+    [Test]
+    public async Task WhereIsSpace_ReturnsCreatedSpace()
+    {
+        // Space creation isn't guaranteed to succeed in every environment (see CreateModel, e.g. Space and
+        // Zone settings not initialized) - nothing to verify against SpaceFilter if it didn't.
+        if (_space is null) return;
+
+        var elementIds = CreateCollector().WhereIsSpace().ToElementIds();
+
+        await Assert.That(elementIds.Contains(_space.Id)).IsTrue();
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsFalse();
+    }
+
+    [Test]
+    public async Task WhereBoundingBoxIntersects_FiltersToIntersectingElement()
+    {
+        var wallBoundingBox = _wall!.get_BoundingBox(null);
+
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .WhereBoundingBoxIntersects(wallBoundingBox.Min, wallBoundingBox.Max, 0.01)
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall.Id)).IsTrue();
+    }
+
+    [Test]
+    public async Task WhereBoundingBoxIntersects_ExcludesNonIntersectingElement()
+    {
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .WhereBoundingBoxIntersects(new XYZ(1000, 1000, 1000), new XYZ(1001, 1001, 1001), 0.01)
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsFalse();
     }
 
     [Test]
@@ -514,6 +602,51 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
         await AssertThrows<ArgumentNullException>(() => collector.Excluding(null!)).ConfigureAwait(false);
     }
 
+    [Test]
+    public async Task WhereIsRoom_CalledTwice_Throws()
+    {
+        var collector = CreateCollector().WhereIsRoom();
+
+        await AssertThrows<InvalidOperationException>(() => collector.WhereIsRoom()).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task WhereIsSpace_CalledTwice_Throws()
+    {
+        var collector = CreateCollector().WhereIsSpace();
+
+        await AssertThrows<InvalidOperationException>(() => collector.WhereIsSpace()).ConfigureAwait(false);
+    }
+
+    /// <summary>WhereIsRoom and WhereIsSpace are independent slots - combining them is pointless (never matches
+    /// anything) but not restricted, same as OfClass/OfCategory can be combined even if the combination is
+    /// always empty.</summary>
+    [Test]
+    public async Task WhereIsRoom_CombinedWithWhereIsSpace_DoesNotThrow()
+    {
+        var elementIds = CreateCollector().WhereIsRoom().WhereIsSpace().ToElementIds();
+
+        await Assert.That(elementIds.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task WhereBoundingBoxIntersects_NullMin_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(
+            () => collector.WhereBoundingBoxIntersects(null!, new XYZ(1, 1, 1), 0.01)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task WhereBoundingBoxIntersects_NullMax_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(
+            () => collector.WhereBoundingBoxIntersects(XYZ.Zero, null!, 0.01)).ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Verifies the open risk flagged during design: the cache key uses
     /// <see cref="RuntimeHelpers.GetHashCode(object)"/> for document identity (not <see cref="object.GetHashCode"/>),
@@ -529,9 +662,9 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     /// Also deliberately does NOT compare <see cref="Element.Document"/> by reference against the <see cref="Document"/>
     /// used to build the query: that turned out not to be reference-stable in this Revit API binding (an element's
     /// own <c>.Document</c> can be a different managed wrapper instance than the one passed to
-    /// <see cref="FilteredElementCollector"/>/<see cref="CachedElementCollector"/>) - a real finding about the Revit
+    /// <see cref="Autodesk.Revit.DB.FilteredElementCollector"/>/<see cref="CachedElementCollector"/>) - a real finding about the Revit
     /// API, not about caching correctness. Isolation is proven instead by the result list sizes: a
-    /// <see cref="FilteredElementCollector"/> scoped to one <see cref="Document"/> can never return another
+    /// <see cref="Autodesk.Revit.DB.FilteredElementCollector"/> scoped to one <see cref="Document"/> can never return another
     /// document's elements regardless of what the cache does, so if each list contains exactly the one wall seeded
     /// into its own document, no cross-document leak occurred.
     /// </summary>
