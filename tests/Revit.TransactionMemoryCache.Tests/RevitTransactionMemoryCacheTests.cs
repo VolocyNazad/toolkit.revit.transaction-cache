@@ -32,7 +32,7 @@ public class RevitTransactionMemoryCacheTests
         using var provider = CreateProvider();
         var cache = provider.GetRequiredService<IRevitTransactionMemoryCache>();
 
-        Assert.Throws<ArgumentNullException>(() => cache.GetOrCreate<int>(null!, () => 1));
+        Assert.Throws<ArgumentNullException>(() => cache.GetOrCreate(null!, () => 1));
     }
 
     [Fact]

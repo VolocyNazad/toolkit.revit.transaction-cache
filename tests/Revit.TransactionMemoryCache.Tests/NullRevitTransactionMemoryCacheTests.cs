@@ -36,7 +36,7 @@ public class NullRevitTransactionMemoryCacheTests
     {
         var cache = NullRevitTransactionMemoryCache.Instance;
 
-        Assert.Throws<ArgumentNullException>(() => cache.GetOrCreate<int>(null!, () => 1));
+        Assert.Throws<ArgumentNullException>(() => cache.GetOrCreate(null!, () => 1));
     }
 
     [Fact]
