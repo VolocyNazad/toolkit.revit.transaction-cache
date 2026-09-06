@@ -105,6 +105,8 @@ public sealed class MyService(ICachedElementCollectorFactory collectorFactory)
     - `double` — только с явным `epsilon` (`WhereParameterEquals(parameter, value, epsilon)`), т.к. точное сравнение `double` почти никогда не то, что нужно, а разумная погрешность зависит от единиц измерения параметра (длина/площадь/угол).
     - Перегрузка с `ElementId parameterId` вместо `BuiltInParameter` — для shared/project-параметров, у которых нет `BuiltInParameter` (например, `SharedParameterElement.Id`).
   - `WhereParameterNotEquals(...)` — те же перегрузки, что и `WhereParameterEquals`, но инвертированные (`ElementParameterFilter` с `inverted: true`). Так же не ограничен по числу вызовов.
+  - `WhereIsRoom()` / `WhereIsSpace()` — quick-фильтры `RoomFilter`/`SpaceFilter` (без параметров, поэтому и без проблем с value equality). Once-only каждый, но независимые "слоты" — можно скомбинировать оба в одной цепочке (результат при этом всегда пуст, но исключения не будет).
+  - `WhereBoundingBoxIntersects(XYZ min, XYZ max, double epsilon)` — единственный поддерживаемый геометрический фильтр (`BoundingBoxIntersectsFilter`/`Outline`). Сам фильтр на стороне Revit строится по точным координатам, но в ключ кэша каждая координата округляется до `epsilon` — иначе `XYZ` не даёт стабильного равенства для ключа. `epsilon` обязателен явно (по той же причине, что и у `double`-перегрузок `WhereParameterEquals`). Не ограничен по числу вызовов.
 
 ## Известные ограничения
 

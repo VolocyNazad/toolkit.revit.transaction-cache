@@ -21,6 +21,9 @@ internal static class TestStubs
                 public CachedElementCollector WhereElementIsElementType() => this;
                 public CachedElementCollector WhereElementIsNotElementType() => this;
                 public CachedElementCollector Excluding(System.Collections.Generic.ICollection<int> elementIds) => this;
+                public CachedElementCollector WhereIsRoom() => this;
+                public CachedElementCollector WhereIsSpace() => this;
+                public CachedElementCollector WhereBoundingBoxIntersects(int min, int max, double epsilon) => this;
                 public System.Collections.Generic.IReadOnlyList<object> ToElements() => null!;
                 public System.Collections.Generic.IReadOnlyList<int> ToElementIds() => null!;
             }

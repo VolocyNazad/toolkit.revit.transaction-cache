@@ -358,4 +358,85 @@ public class ConflictingFluentCallAnalyzerTests
 
         Assert.DoesNotContain(diagnostics, d => d.Id == "RTMC002");
     }
+
+    [Fact]
+    public async Task DuplicateWhereIsRoom_ReportsRtmc002()
+    {
+        const string source = """
+            using Revit.TransactionMemoryCache.Services;
+
+            class C
+            {
+                void M(CachedElementCollector collector)
+                {
+                    var chain = collector.WhereIsRoom().WhereIsRoom();
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new ConflictingFluentCallAnalyzer(), source);
+
+        Assert.Contains(diagnostics, d => d.Id == "RTMC002");
+    }
+
+    [Fact]
+    public async Task DuplicateWhereIsSpace_ReportsRtmc002()
+    {
+        const string source = """
+            using Revit.TransactionMemoryCache.Services;
+
+            class C
+            {
+                void M(CachedElementCollector collector)
+                {
+                    var chain = collector.WhereIsSpace().WhereIsSpace();
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new ConflictingFluentCallAnalyzer(), source);
+
+        Assert.Contains(diagnostics, d => d.Id == "RTMC002");
+    }
+
+    /// <summary>WhereIsRoom and WhereIsSpace are independent slots - combining them is pointless but not restricted.</summary>
+    [Fact]
+    public async Task WhereIsRoom_ThenWhereIsSpace_DoesNotReport()
+    {
+        const string source = """
+            using Revit.TransactionMemoryCache.Services;
+
+            class C
+            {
+                void M(CachedElementCollector collector)
+                {
+                    var chain = collector.WhereIsRoom().WhereIsSpace();
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new ConflictingFluentCallAnalyzer(), source);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "RTMC002");
+    }
+
+    [Fact]
+    public async Task MultipleWhereBoundingBoxIntersects_DoesNotReport()
+    {
+        const string source = """
+            using Revit.TransactionMemoryCache.Services;
+
+            class C
+            {
+                void M(CachedElementCollector collector)
+                {
+                    var chain = collector.WhereBoundingBoxIntersects(1, 1, 0.01).WhereBoundingBoxIntersects(2, 2, 0.01);
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new ConflictingFluentCallAnalyzer(), source);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "RTMC002");
+    }
 }

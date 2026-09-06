@@ -14,8 +14,10 @@ namespace Revit.TransactionMemoryCache.Analyzers;
 /// <c>NotOfCategory</c>/<c>NotOfCategories</c> (a separate slot from <c>OfCategory</c>/<c>OfCategories</c> -
 /// the positive and negated filters compose fine together) and <c>Excluding</c> may each appear at
 /// most once, and <c>WhereElementIsElementType</c>/<c>WhereElementIsNotElementType</c> are mutually
-/// exclusive. <c>WhereParameterEquals</c>/<c>WhereParameterNotEquals</c> are intentionally not restricted -
-/// they may be called any number of times per chain.
+/// exclusive. <c>WhereIsRoom</c>/<c>WhereIsSpace</c> may each appear at most once, in independent slots (not
+/// mutually exclusive with each other). <c>WhereParameterEquals</c>/<c>WhereParameterNotEquals</c>/
+/// <c>WhereBoundingBoxIntersects</c> are intentionally not restricted - they may be called any number of times
+/// per chain.
 /// <c>CachedElementCollector</c> throws <see cref="InvalidOperationException"/> immediately when this
 /// happens at runtime, so this analyzer surfaces it at compile time instead.
 ///
@@ -42,6 +44,8 @@ public sealed class ConflictingFluentCallAnalyzer : DiagnosticAnalyzer
         ["Excluding"] = "Excluding",
         ["WhereElementIsElementType"] = "ElementTypeFilter",
         ["WhereElementIsNotElementType"] = "ElementTypeFilter",
+        ["WhereIsRoom"] = "RoomFilter",
+        ["WhereIsSpace"] = "SpaceFilter",
     };
 
     /// <inheritdoc />

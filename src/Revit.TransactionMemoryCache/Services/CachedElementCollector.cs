@@ -1,11 +1,14 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.DB.Mechanical;
 using Revit.TransactionMemoryCache.Abstractions.Services;
 
 namespace Revit.TransactionMemoryCache.Services;
 
 /// <summary>
-/// A cached, fluent alternative to <see cref="FilteredElementCollector"/>: the same kind of chained
+/// A cached, fluent alternative to <see cref="Autodesk.Revit.DB.FilteredElementCollector"/>: the same kind of chained
 /// configuration (<see cref="OfClass"/>, <see cref="OfCategory"/>, ...), but nothing touches Revit's API until
 /// a terminal call (<see cref="ToElements"/>/<see cref="ToElementIds"/>) - and even then, only on a cache miss.
 ///
@@ -15,14 +18,14 @@ namespace Revit.TransactionMemoryCache.Services;
 /// automatic invalidation when the document changes.
 ///
 /// Every instance is immutable: each fluent call returns a *new* <see cref="CachedElementCollector"/> rather
-/// than mutating the current one, and the underlying <see cref="FilteredElementCollector"/> is never built
+/// than mutating the current one, and the underlying <see cref="Autodesk.Revit.DB.FilteredElementCollector"/> is never built
 /// during the fluent chain - only inside the cache's factory delegate, on a miss. Key fragments recorded by
 /// each call are sorted (see <see cref="CachedElementCollectorKeyBuilder"/>) before being combined into the
 /// cache key, so the same logical query built in a different call order produces the same key.
 ///
 /// <see cref="OfClass"/>/<see cref="OfCategory"/>/<see cref="WhereElementIsElementType"/>/
 /// <see cref="WhereElementIsNotElementType"/>/<see cref="Excluding"/> may each be called at most once per
-/// chain (mirroring <see cref="FilteredElementCollector"/>'s own restrictions), and
+/// chain (mirroring <see cref="Autodesk.Revit.DB.FilteredElementCollector"/>'s own restrictions), and
 /// <see cref="WhereElementIsElementType"/>/<see cref="WhereElementIsNotElementType"/> are mutually exclusive -
 /// violating either throws immediately, rather than waiting for a cache miss to surface a Revit-side error.
 /// <see cref="Of{TElement}"/> is generic sugar for <see cref="OfClass"/>
@@ -49,10 +52,28 @@ namespace Revit.TransactionMemoryCache.Services;
 /// <see cref="OfCategory"/>/<see cref="OfCategories"/>) but are a *separate* slot from the positive
 /// category filters - the two can be combined in the same chain, they're independent quick filters.
 ///
+/// <see cref="WhereIsRoom"/>/<see cref="WhereIsSpace"/> wrap
+/// <see cref="Autodesk.Revit.DB.Architecture.RoomFilter"/>/<see cref="Autodesk.Revit.DB.Mechanical.SpaceFilter"/> -
+/// parameterless quick filters, so (like <see cref="WhereElementIsElementType"/>) they need no equality
+/// workaround. Each is once-only, and independent of the other (nothing stops combining them, it would just
+/// never match anything).
+///
+/// <see cref="WhereBoundingBoxIntersects"/> wraps <c>WherePasses(new BoundingBoxIntersectsFilter(new Outline(min, max)))</c> -
+/// unlike the other geometric filters, this one is supported because the cache key rounds each
+/// <see cref="Autodesk.Revit.DB.XYZ"/> coordinate to an explicit <c>epsilon</c> before hashing it (the real
+/// filter still uses the exact coordinates), the same explicit-tolerance approach as the <see langword="double"/>
+/// parameter overloads. Unrestricted, like <c>WhereParameterEquals</c>/<c>WhereParameterNotEquals</c>.
+///
 /// The values returned by <see cref="ToElements"/>/<see cref="ToElementIds"/> are shared across every caller
 /// that hits the same cache entry - do not cast them to a mutable collection type and modify them, that would
 /// silently corrupt the cached result for everyone else who queries the same chain.
 /// </summary>
+[SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+    Justification = "Every FilterRule built by WhereParameterEquals/WhereParameterNotEquals is captured by " +
+                     "the deferred step delegate (see WithParameterFilter) and reused for as long as this " +
+                     "CachedElementCollector's fluent chain is queried - there is no single method scope to " +
+                     "dispose it at the end of, its lifetime is tied to the delegate/GC like the rest of the " +
+                     "fluent chain's state.")]
 public sealed class CachedElementCollector
 {
     private readonly Document _document;
@@ -65,9 +86,11 @@ public sealed class CachedElementCollector
     private readonly bool _hasNotCategoryFilter;
     private readonly bool _hasElementTypeFilter;
     private readonly bool _hasExcluding;
+    private readonly bool _hasRoomFilter;
+    private readonly bool _hasSpaceFilter;
 
     internal CachedElementCollector(Document document, IRevitTransactionMemoryCache cache)
-        : this(document, cache, [], [], false, false, false, false, false, false)
+        : this(document, cache, [], [], false, false, false, false, false, false, false, false)
     {
     }
 
@@ -81,7 +104,9 @@ public sealed class CachedElementCollector
         bool hasCategoryFilter,
         bool hasNotCategoryFilter,
         bool hasElementTypeFilter,
-        bool hasExcluding)
+        bool hasExcluding,
+        bool hasRoomFilter,
+        bool hasSpaceFilter)
     {
         _document = document;
         _cache = cache;
@@ -93,6 +118,8 @@ public sealed class CachedElementCollector
         _hasNotCategoryFilter = hasNotCategoryFilter;
         _hasElementTypeFilter = hasElementTypeFilter;
         _hasExcluding = hasExcluding;
+        _hasRoomFilter = hasRoomFilter;
+        _hasSpaceFilter = hasSpaceFilter;
     }
 
     /// <summary>Equivalent to <see cref="Autodesk.Revit.DB.FilteredElementCollector.OfClass(Type)"/>. May be called at most once.</summary>
@@ -344,11 +371,17 @@ public sealed class CachedElementCollector
     {
         ArgumentNullException.ThrowIfNull(value);
 
+        // The 3-arg overload is deprecated starting Revit 2023 (case sensitivity is no longer
+        // configurable there), but this library also targets pre-2023 Revit versions where the
+        // parameterless-case-sensitivity overload doesn't exist - kept deliberately, to preserve
+        // documented case-insensitive behaviour across every supported version.
+#pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterEquals),
             $"BuiltIn:{(int)parameter}",
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value, caseSensitive: false));
+#pragma warning restore CS0618
     }
 
     /// <summary>
@@ -410,11 +443,15 @@ public sealed class CachedElementCollector
         ArgumentNullException.ThrowIfNull(parameterId);
         ArgumentNullException.ThrowIfNull(value);
 
+        // See the BuiltInParameter string overload above for why the deprecated 3-arg overload is
+        // kept deliberately.
+#pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterEquals),
             $"Id:{parameterId.Value}",
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, caseSensitive: false));
+#pragma warning restore CS0618
     }
 
     /// <summary>
@@ -471,12 +508,16 @@ public sealed class CachedElementCollector
     {
         ArgumentNullException.ThrowIfNull(value);
 
+        // See the BuiltInParameter string overload of WhereParameterEquals for why the deprecated
+        // 3-arg overload is kept deliberately.
+#pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
             $"BuiltIn:{(int)parameter}",
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value, caseSensitive: false),
             inverted: true);
+#pragma warning restore CS0618
     }
 
     /// <summary>
@@ -535,12 +576,16 @@ public sealed class CachedElementCollector
         ArgumentNullException.ThrowIfNull(parameterId);
         ArgumentNullException.ThrowIfNull(value);
 
+        // See the BuiltInParameter string overload of WhereParameterEquals for why the deprecated
+        // 3-arg overload is kept deliberately.
+#pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
             $"Id:{parameterId.Value}",
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, caseSensitive: false),
             inverted: true);
+#pragma warning restore CS0618
     }
 
     /// <summary>
@@ -576,6 +621,70 @@ public sealed class CachedElementCollector
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, epsilon),
             inverted: true);
     }
+
+    /// <summary>
+    /// Equivalent to <c>WherePasses(new RoomFilter())</c> - a quick filter matching only
+    /// <see cref="Autodesk.Revit.DB.Architecture.Room"/> elements. Unlike <c>WherePasses(ElementFilter)</c> in
+    /// general, <see cref="Autodesk.Revit.DB.Architecture.RoomFilter"/> takes no parameters, so it has trivial
+    /// value equality and needs no special handling to be cache-key-safe. May be called at most once.
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException"><see cref="WhereIsRoom"/> has already been called on this chain.</exception>
+    public CachedElementCollector WhereIsRoom()
+    {
+        if (_hasRoomFilter)
+            throw new InvalidOperationException($"{nameof(WhereIsRoom)} has already been called on this {nameof(CachedElementCollector)}.");
+
+        return With(
+            nameof(WhereIsRoom),
+            collector => collector.WherePasses(new RoomFilter()),
+            hasRoomFilter: true);
+    }
+
+    /// <summary>
+    /// Equivalent to <c>WherePasses(new SpaceFilter())</c> - a quick filter matching only
+    /// <see cref="Autodesk.Revit.DB.Mechanical.Space"/> elements. Same trivial-equality reasoning as
+    /// <see cref="WhereIsRoom"/>. May be called at most once.
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException"><see cref="WhereIsSpace"/> has already been called on this chain.</exception>
+    public CachedElementCollector WhereIsSpace()
+    {
+        if (_hasSpaceFilter)
+            throw new InvalidOperationException($"{nameof(WhereIsSpace)} has already been called on this {nameof(CachedElementCollector)}.");
+
+        return With(
+            nameof(WhereIsSpace),
+            collector => collector.WherePasses(new SpaceFilter()),
+            hasSpaceFilter: true);
+    }
+
+    /// <summary>
+    /// Equivalent to <c>WherePasses(new BoundingBoxIntersectsFilter(new Outline(min, max)))</c>. Unlike the
+    /// once-only filters above, this may be called any number of times per chain - each call narrows the
+    /// result further, same as <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/>.
+    /// Requires an explicit <paramref name="epsilon"/>, for the same reason as the <see langword="double"/>
+    /// parameter overloads: the real Revit-side filter always uses the exact <paramref name="min"/>/
+    /// <paramref name="max"/> coordinates, but <see cref="Autodesk.Revit.DB.XYZ"/> has no stable equality to
+    /// key a cache on, so the cache key rounds each coordinate to the nearest multiple of
+    /// <paramref name="epsilon"/> first.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException"><paramref name="min"/> or <paramref name="max"/> is <see langword="null"/>.</exception>
+    public CachedElementCollector WhereBoundingBoxIntersects(XYZ min, XYZ max, double epsilon)
+    {
+        ArgumentNullException.ThrowIfNull(min);
+        ArgumentNullException.ThrowIfNull(max);
+
+        var keyFragment =
+            $"WhereBoundingBoxIntersects:" +
+            $"{RoundForKey(min.X, epsilon)},{RoundForKey(min.Y, epsilon)},{RoundForKey(min.Z, epsilon)}:" +
+            $"{RoundForKey(max.X, epsilon)},{RoundForKey(max.Y, epsilon)},{RoundForKey(max.Z, epsilon)}:{epsilon}";
+
+        return With(
+            keyFragment,
+            collector => collector.WherePasses(new BoundingBoxIntersectsFilter(new Outline(min, max))));
+    }
+
+    private static string RoundForKey(double value, double epsilon) =>
+        (Math.Round(value / epsilon) * epsilon).ToString("R", System.Globalization.CultureInfo.InvariantCulture);
 
     private CachedElementCollector WithParameterFilter(
         string methodName, string parameterKeyFragment, string valueFragment, FilterRule rule, bool inverted = false) =>
@@ -623,7 +732,9 @@ public sealed class CachedElementCollector
         bool hasCategoryFilter = false,
         bool hasNotCategoryFilter = false,
         bool hasElementTypeFilter = false,
-        bool hasExcluding = false) =>
+        bool hasExcluding = false,
+        bool hasRoomFilter = false,
+        bool hasSpaceFilter = false) =>
         new(
             _document,
             _cache,
@@ -634,7 +745,9 @@ public sealed class CachedElementCollector
             _hasCategoryFilter || hasCategoryFilter,
             _hasNotCategoryFilter || hasNotCategoryFilter,
             _hasElementTypeFilter || hasElementTypeFilter,
-            _hasExcluding || hasExcluding);
+            _hasExcluding || hasExcluding,
+            _hasRoomFilter || hasRoomFilter,
+            _hasSpaceFilter || hasSpaceFilter);
 
     private string BuildKey(string terminal) =>
         CachedElementCollectorKeyBuilder.Build(RuntimeHelpers.GetHashCode(_document), terminal, _keyFragments);

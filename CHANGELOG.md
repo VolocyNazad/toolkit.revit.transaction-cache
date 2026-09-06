@@ -48,6 +48,18 @@ in `Revit.TransactionMemoryCache.csproj`).
   (`ElementClassFilter` with `inverted: true`), once-only in its own
   slot, composable with `OfClass`/`Of<T>`. RTMC002 covers this conflict
   group too.
+- `WhereIsRoom()`/`WhereIsSpace()` - wrap the parameter-less
+  `RoomFilter`/`SpaceFilter` quick filters, so they need no equality
+  workaround. Once-only each, in independent slots (composable with each
+  other, though the combination always matches nothing). RTMC002 covers
+  both.
+- `WhereBoundingBoxIntersects(XYZ min, XYZ max, double epsilon)` - the
+  first supported geometric filter (`BoundingBoxIntersectsFilter`/
+  `Outline`). The real Revit-side filter uses the exact coordinates; the
+  cache key rounds each coordinate to an explicit required `epsilon`
+  first, since `XYZ` has no stable equality to key a cache on - same
+  explicit-tolerance approach as the `double` `WhereParameterEquals`
+  overloads. Unrestricted, like `WhereParameterEquals`.
 
 ### Changed
 
