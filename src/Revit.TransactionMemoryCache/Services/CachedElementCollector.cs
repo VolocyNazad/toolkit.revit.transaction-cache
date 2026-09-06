@@ -127,7 +127,7 @@ public sealed class CachedElementCollector
     /// <exception cref="System.InvalidOperationException"><see cref="OfClass"/> has already been called on this chain.</exception>
     public CachedElementCollector OfClass(Type elementClass)
     {
-        ArgumentNullException.ThrowIfNull(elementClass);
+        ThrowHelper.ThrowIfNull(elementClass);
 
         if (_hasClassFilter)
             throw new InvalidOperationException($"{nameof(OfClass)} has already been called on this {nameof(CachedElementCollector)}.");
@@ -161,7 +161,7 @@ public sealed class CachedElementCollector
     /// </exception>
     public CachedElementCollector NotOfClass(Type elementClass)
     {
-        ArgumentNullException.ThrowIfNull(elementClass);
+        ThrowHelper.ThrowIfNull(elementClass);
 
         if (_hasNotClassFilter)
             throw new InvalidOperationException(
@@ -217,7 +217,7 @@ public sealed class CachedElementCollector
     /// </exception>
     public CachedElementCollector OfCategories(IEnumerable<BuiltInCategory> categories)
     {
-        ArgumentNullException.ThrowIfNull(categories);
+        ThrowHelper.ThrowIfNull(categories);
 
         var categoryList = categories.ToArray();
         if (categoryList.Length == 0)
@@ -270,7 +270,7 @@ public sealed class CachedElementCollector
     /// </exception>
     public CachedElementCollector NotOfCategories(IEnumerable<BuiltInCategory> categories)
     {
-        ArgumentNullException.ThrowIfNull(categories);
+        ThrowHelper.ThrowIfNull(categories);
 
         var categoryList = categories.ToArray();
         if (categoryList.Length == 0)
@@ -334,13 +334,13 @@ public sealed class CachedElementCollector
     /// <exception cref="System.InvalidOperationException"><see cref="Excluding"/> has already been called on this chain.</exception>
     public CachedElementCollector Excluding(ICollection<ElementId> elementIds)
     {
-        ArgumentNullException.ThrowIfNull(elementIds);
+        ThrowHelper.ThrowIfNull(elementIds);
 
         if (_hasExcluding)
             throw new InvalidOperationException($"{nameof(Excluding)} has already been called on this {nameof(CachedElementCollector)}.");
 
         var ids = elementIds.ToArray();
-        var sortedIdValues = ids.Select(id => id.Value).OrderBy(value => value);
+        var sortedIdValues = ids.Select(id => GetIdValue(id)).OrderBy(value => value);
 
         return With(
             $"Excluding:{string.Join(",", sortedIdValues)}",
@@ -369,7 +369,7 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterEquals(BuiltInParameter parameter, string value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        ThrowHelper.ThrowIfNull(value);
 
         // The 3-arg overload is deprecated starting Revit 2023 (case sensitivity is no longer
         // configurable there), but this library also targets pre-2023 Revit versions where the
@@ -393,12 +393,12 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterEquals(BuiltInParameter parameter, ElementId value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        ThrowHelper.ThrowIfNull(value);
 
         return WithParameterFilter(
             nameof(WhereParameterEquals),
             $"BuiltIn:{(int)parameter}",
-            $"ElementId:{value.Value}",
+            $"ElementId:{GetIdValue(value)}",
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value));
     }
 
@@ -424,11 +424,11 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterEquals(ElementId parameterId, int value)
     {
-        ArgumentNullException.ThrowIfNull(parameterId);
+        ThrowHelper.ThrowIfNull(parameterId);
 
         return WithParameterFilter(
             nameof(WhereParameterEquals),
-            $"Id:{parameterId.Value}",
+            $"Id:{GetIdValue(parameterId)}",
             $"Int:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value));
     }
@@ -440,15 +440,15 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> or <paramref name="value"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterEquals(ElementId parameterId, string value)
     {
-        ArgumentNullException.ThrowIfNull(parameterId);
-        ArgumentNullException.ThrowIfNull(value);
+        ThrowHelper.ThrowIfNull(parameterId);
+        ThrowHelper.ThrowIfNull(value);
 
         // See the BuiltInParameter string overload above for why the deprecated 3-arg overload is
         // kept deliberately.
 #pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterEquals),
-            $"Id:{parameterId.Value}",
+            $"Id:{GetIdValue(parameterId)}",
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, caseSensitive: false));
 #pragma warning restore CS0618
@@ -460,13 +460,13 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> or <paramref name="value"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterEquals(ElementId parameterId, ElementId value)
     {
-        ArgumentNullException.ThrowIfNull(parameterId);
-        ArgumentNullException.ThrowIfNull(value);
+        ThrowHelper.ThrowIfNull(parameterId);
+        ThrowHelper.ThrowIfNull(value);
 
         return WithParameterFilter(
             nameof(WhereParameterEquals),
-            $"Id:{parameterId.Value}",
-            $"ElementId:{value.Value}",
+            $"Id:{GetIdValue(parameterId)}",
+            $"ElementId:{GetIdValue(value)}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value));
     }
 
@@ -477,11 +477,11 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterEquals(ElementId parameterId, double value, double epsilon)
     {
-        ArgumentNullException.ThrowIfNull(parameterId);
+        ThrowHelper.ThrowIfNull(parameterId);
 
         return WithParameterFilter(
             nameof(WhereParameterEquals),
-            $"Id:{parameterId.Value}",
+            $"Id:{GetIdValue(parameterId)}",
             $"Double:{value}:{epsilon}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, epsilon));
     }
@@ -506,7 +506,7 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterNotEquals(BuiltInParameter parameter, string value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        ThrowHelper.ThrowIfNull(value);
 
         // See the BuiltInParameter string overload of WhereParameterEquals for why the deprecated
         // 3-arg overload is kept deliberately.
@@ -526,12 +526,12 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterNotEquals(BuiltInParameter parameter, ElementId value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        ThrowHelper.ThrowIfNull(value);
 
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
             $"BuiltIn:{(int)parameter}",
-            $"ElementId:{value.Value}",
+            $"ElementId:{GetIdValue(value)}",
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value),
             inverted: true);
     }
@@ -556,11 +556,11 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterNotEquals(ElementId parameterId, int value)
     {
-        ArgumentNullException.ThrowIfNull(parameterId);
+        ThrowHelper.ThrowIfNull(parameterId);
 
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
-            $"Id:{parameterId.Value}",
+            $"Id:{GetIdValue(parameterId)}",
             $"Int:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value),
             inverted: true);
@@ -573,15 +573,15 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> or <paramref name="value"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterNotEquals(ElementId parameterId, string value)
     {
-        ArgumentNullException.ThrowIfNull(parameterId);
-        ArgumentNullException.ThrowIfNull(value);
+        ThrowHelper.ThrowIfNull(parameterId);
+        ThrowHelper.ThrowIfNull(value);
 
         // See the BuiltInParameter string overload of WhereParameterEquals for why the deprecated
         // 3-arg overload is kept deliberately.
 #pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
-            $"Id:{parameterId.Value}",
+            $"Id:{GetIdValue(parameterId)}",
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, caseSensitive: false),
             inverted: true);
@@ -594,13 +594,13 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> or <paramref name="value"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterNotEquals(ElementId parameterId, ElementId value)
     {
-        ArgumentNullException.ThrowIfNull(parameterId);
-        ArgumentNullException.ThrowIfNull(value);
+        ThrowHelper.ThrowIfNull(parameterId);
+        ThrowHelper.ThrowIfNull(value);
 
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
-            $"Id:{parameterId.Value}",
-            $"ElementId:{value.Value}",
+            $"Id:{GetIdValue(parameterId)}",
+            $"ElementId:{GetIdValue(value)}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value),
             inverted: true);
     }
@@ -612,11 +612,11 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereParameterNotEquals(ElementId parameterId, double value, double epsilon)
     {
-        ArgumentNullException.ThrowIfNull(parameterId);
+        ThrowHelper.ThrowIfNull(parameterId);
 
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
-            $"Id:{parameterId.Value}",
+            $"Id:{GetIdValue(parameterId)}",
             $"Double:{value}:{epsilon}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, epsilon),
             inverted: true);
@@ -670,8 +670,8 @@ public sealed class CachedElementCollector
     /// <exception cref="System.ArgumentNullException"><paramref name="min"/> or <paramref name="max"/> is <see langword="null"/>.</exception>
     public CachedElementCollector WhereBoundingBoxIntersects(XYZ min, XYZ max, double epsilon)
     {
-        ArgumentNullException.ThrowIfNull(min);
-        ArgumentNullException.ThrowIfNull(max);
+        ThrowHelper.ThrowIfNull(min);
+        ThrowHelper.ThrowIfNull(max);
 
         var keyFragment =
             $"WhereBoundingBoxIntersects:" +
@@ -748,6 +748,14 @@ public sealed class CachedElementCollector
             _hasExcluding || hasExcluding,
             _hasRoomFilter || hasRoomFilter,
             _hasSpaceFilter || hasSpaceFilter);
+
+    // ElementId.Value (long) is Revit 2024+ API; before that, ElementId only exposes IntegerValue (int).
+    // AFTER2024 is defined by VolocyNazad.Revit.Sdk for configurations targeting Revit 2024 and later.
+#if AFTER2024
+    private static long GetIdValue(ElementId id) => id.Value;
+#else
+    private static long GetIdValue(ElementId id) => id.IntegerValue;
+#endif
 
     private string BuildKey(string terminal) =>
         CachedElementCollectorKeyBuilder.Build(RuntimeHelpers.GetHashCode(_document), terminal, _keyFragments);

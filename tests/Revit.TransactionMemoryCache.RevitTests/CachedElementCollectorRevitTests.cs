@@ -402,7 +402,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(() => collector.OfClass(null!)).ConfigureAwait(false);
+        await AssertThrows<System.ArgumentNullException>(() => collector.OfClass(null!)).ConfigureAwait(false);
     }
 
     [Test]
@@ -426,7 +426,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(() => collector.NotOfClass(null!)).ConfigureAwait(false);
+        await AssertThrows<System.ArgumentNullException>(() => collector.NotOfClass(null!)).ConfigureAwait(false);
     }
 
     [Test]
@@ -466,7 +466,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(() => collector.OfCategories(null!)).ConfigureAwait(false);
+        await AssertThrows<System.ArgumentNullException>(() => collector.OfCategories(null!)).ConfigureAwait(false);
     }
 
     [Test]
@@ -482,7 +482,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(
+        await AssertThrows<System.ArgumentNullException>(
             () => collector.WhereParameterEquals(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS, (string)null!)).ConfigureAwait(false);
     }
 
@@ -491,7 +491,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(
+        await AssertThrows<System.ArgumentNullException>(
             () => collector.WhereParameterEquals(BuiltInParameter.WALL_BASE_CONSTRAINT, (ElementId)null!)).ConfigureAwait(false);
     }
 
@@ -500,7 +500,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(
+        await AssertThrows<System.ArgumentNullException>(
             () => collector.WhereParameterEquals((ElementId)null!, 1)).ConfigureAwait(false);
     }
 
@@ -525,7 +525,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(() => collector.NotOfCategories(null!)).ConfigureAwait(false);
+        await AssertThrows<System.ArgumentNullException>(() => collector.NotOfCategories(null!)).ConfigureAwait(false);
     }
 
     [Test]
@@ -541,7 +541,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(
+        await AssertThrows<System.ArgumentNullException>(
             () => collector.WhereParameterNotEquals(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS, (string)null!)).ConfigureAwait(false);
     }
 
@@ -550,7 +550,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(
+        await AssertThrows<System.ArgumentNullException>(
             () => collector.WhereParameterNotEquals((ElementId)null!, 1)).ConfigureAwait(false);
     }
 
@@ -599,7 +599,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(() => collector.Excluding(null!)).ConfigureAwait(false);
+        await AssertThrows<System.ArgumentNullException>(() => collector.Excluding(null!)).ConfigureAwait(false);
     }
 
     [Test]
@@ -634,7 +634,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(
+        await AssertThrows<System.ArgumentNullException>(
             () => collector.WhereBoundingBoxIntersects(null!, new XYZ(1, 1, 1), 0.01)).ConfigureAwait(false);
     }
 
@@ -643,7 +643,7 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     {
         var collector = CreateCollector();
 
-        await AssertThrows<ArgumentNullException>(
+        await AssertThrows<System.ArgumentNullException>(
             () => collector.WhereBoundingBoxIntersects(XYZ.Zero, null!, 0.01)).ConfigureAwait(false);
     }
 

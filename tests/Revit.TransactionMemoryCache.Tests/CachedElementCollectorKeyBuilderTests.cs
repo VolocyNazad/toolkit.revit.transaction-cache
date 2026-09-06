@@ -56,12 +56,12 @@ public class CachedElementCollectorKeyBuilderTests
     [Fact]
     public void Build_ThrowsArgumentNullException_WhenTerminalIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => CachedElementCollectorKeyBuilder.Build(1, null!, []));
+        Assert.Throws<System.ArgumentNullException>(() => CachedElementCollectorKeyBuilder.Build(1, null!, []));
     }
 
     [Fact]
     public void Build_ThrowsArgumentNullException_WhenFragmentsIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => CachedElementCollectorKeyBuilder.Build(1, "ToElements", null!));
+        Assert.Throws<System.ArgumentNullException>(() => CachedElementCollectorKeyBuilder.Build(1, "ToElements", null!));
     }
 }

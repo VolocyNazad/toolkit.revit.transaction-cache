@@ -23,10 +23,10 @@ public static class CachedElementCollectorKeyBuilder
     /// <exception cref="System.ArgumentNullException"><paramref name="terminal"/> or <paramref name="fragments"/> is <see langword="null"/>.</exception>
     public static string Build(int documentIdentity, string terminal, IEnumerable<string> fragments)
     {
-        ArgumentNullException.ThrowIfNull(terminal);
-        ArgumentNullException.ThrowIfNull(fragments);
+        ThrowHelper.ThrowIfNull(terminal);
+        ThrowHelper.ThrowIfNull(fragments);
 
         var sortedFragments = fragments.OrderBy(fragment => fragment, StringComparer.Ordinal);
-        return $"{Prefix}|{documentIdentity}|{string.Join('|', sortedFragments)}|{terminal}";
+        return $"{Prefix}|{documentIdentity}|{string.Join("|", sortedFragments)}|{terminal}";
     }
 }

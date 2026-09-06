@@ -11,7 +11,7 @@ internal sealed class CachedElementCollectorFactory(
     /// <inheritdoc />
     public CachedElementCollector Create(Document document)
     {
-        ArgumentNullException.ThrowIfNull(document);
+        ThrowHelper.ThrowIfNull(document);
 
         if (!initializer.IsInitialized)
         {

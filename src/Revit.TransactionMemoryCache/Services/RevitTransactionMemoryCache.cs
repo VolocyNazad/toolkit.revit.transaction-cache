@@ -33,11 +33,11 @@ internal sealed class RevitTransactionMemoryCache(IRevitContext revitContext, IM
     /// <inheritdoc />
     public TItem? GetOrCreate<TItem>(object key, Func<TItem> factory) {
 #if NET8_0_OR_GREATER
-        ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(factory);
+        ThrowHelper.ThrowIfNull(key);
+        ThrowHelper.ThrowIfNull(factory);
 #else
-        if (key is null) throw new ArgumentNullException(nameof(key));
-        if (factory is null) throw new ArgumentNullException(nameof(factory));
+        if (key is null) throw new System.ArgumentNullException(nameof(key));
+        if (factory is null) throw new System.ArgumentNullException(nameof(factory));
 #endif
 
         CancellationToken refreshToken;
