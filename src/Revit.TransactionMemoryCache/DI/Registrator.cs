@@ -10,6 +10,10 @@ namespace Revit.TransactionMemoryCache.DI;
 /// </summary>
 public static class Registrator
 {
+    // CA1034 false-positives here: the C# "extension" block below compiles to a nested type as an
+    // implementation detail of the new extension-member feature, not a user-visible nested type the
+    // analyzer's "don't nest visible types" rule is meant to catch.
+#pragma warning disable CA1034
 	extension(IServiceCollection services)
 	{
         /// <summary>
@@ -28,4 +32,5 @@ public static class Registrator
             .AddSingleton<ICachedElementCollectorFactory, CachedElementCollectorFactory>()
        ;
     }
+#pragma warning restore CA1034
 }
