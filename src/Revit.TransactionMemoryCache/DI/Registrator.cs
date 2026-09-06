@@ -15,7 +15,8 @@ public static class Registrator
         /// <summary>
         /// Registers <see cref="RevitTransactionMemoryCache"/> (and the underlying <see cref="IMemoryCache"/>
         /// via <see cref="MemoryCacheServiceCollectionExtensions.AddMemoryCache(IServiceCollection)"/>) as a singleton,
-        /// exposing it as both <see cref="IRevitTransactionMemoryCache"/> and <see cref="IRevitTransactionMemoryCacheInitializer"/>.
+        /// exposing it as both <see cref="IRevitTransactionMemoryCache"/> and <see cref="IRevitTransactionMemoryCacheInitializer"/>,
+        /// plus <see cref="ICachedElementCollectorFactory"/> for building <see cref="CachedElementCollector"/> instances.
         /// Requires <c>IRevitContext</c> to also be registered (e.g. via <c>AddRevitContext()</c>).
         /// </summary>
         /// <returns>The same <see cref="IServiceCollection"/> instance for chaining.</returns>
@@ -24,6 +25,7 @@ public static class Registrator
             .AddSingleton<RevitTransactionMemoryCache>()
             .AddSingleton<IRevitTransactionMemoryCache>(i => i.GetRequiredService<RevitTransactionMemoryCache>())
             .AddSingleton<IRevitTransactionMemoryCacheInitializer>(i => i.GetRequiredService<RevitTransactionMemoryCache>())
+            .AddSingleton<ICachedElementCollectorFactory, CachedElementCollectorFactory>()
        ;
     }
 }

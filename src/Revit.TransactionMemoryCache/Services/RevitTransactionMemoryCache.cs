@@ -22,6 +22,15 @@ internal sealed class RevitTransactionMemoryCache(IRevitContext revitContext, IM
     private bool _isDisposed;
 
     /// <inheritdoc />
+    public bool IsInitialized {
+        get {
+            lock (_lifecycleLock) {
+                return _isInitialized;
+            }
+        }
+    }
+
+    /// <inheritdoc />
     public TItem? GetOrCreate<TItem>(object key, Func<TItem> factory) {
 #if NET8_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(key);
@@ -117,7 +126,7 @@ internal sealed class RevitTransactionMemoryCache(IRevitContext revitContext, IM
         revitContext.UIControlledApplication!.ViewActivated -= OnViewActivated;
     }
 
-    /// <summary>Throws <see cref="ObjectDisposedException"/> if the cache has already been disposed.</summary>
+    /// <summary>Throws <see cref="System.ObjectDisposedException"/> if the cache has already been disposed.</summary>
     private void ThrowIfDisposed() {
 #if NET8_0_OR_GREATER
         ObjectDisposedException.ThrowIf(_isDisposed, this);

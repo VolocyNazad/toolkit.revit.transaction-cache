@@ -13,7 +13,7 @@ public interface IRevitTransactionMemoryCache
     /// <typeparam name="TItem">The type of the cached value.</typeparam>
     /// <param name="key">The cache key.</param>
     /// <param name="factory">Produces the value to cache when it is missing.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> or <paramref name="factory"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ObjectDisposedException">The cache has been disposed.</exception>
+    /// <exception cref="System.ArgumentNullException"><paramref name="key"/> or <paramref name="factory"/> is <see langword="null"/>.</exception>
+    /// <exception cref="System.ObjectDisposedException">The cache has been disposed.</exception>
     TItem? GetOrCreate<TItem>(object key, Func<TItem> factory);
 }

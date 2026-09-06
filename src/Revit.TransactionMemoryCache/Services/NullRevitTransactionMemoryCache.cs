@@ -17,6 +17,12 @@ public sealed class NullRevitTransactionMemoryCache : IRevitTransactionMemoryCac
 
     private NullRevitTransactionMemoryCache() { }
 
+    /// <summary>
+    /// Always <see langword="true"/> - a null cache never caches anything, so there is nothing to invalidate
+    /// and no reason to require <see cref="Initialize"/> to have been called.
+    /// </summary>
+    public bool IsInitialized => true;
+
     /// <summary>Invokes <paramref name="factory"/> and returns its result directly, without caching it.</summary>
     /// <exception cref="System.ArgumentNullException"><paramref name="key"/> or <paramref name="factory"/> is <see langword="null"/>.</exception>
     public TItem? GetOrCreate<TItem>(object key, Func<TItem> factory) {

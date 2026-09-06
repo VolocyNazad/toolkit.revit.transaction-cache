@@ -7,6 +7,14 @@
 public interface IRevitTransactionMemoryCacheInitializer
 {
     /// <summary>
+    /// Whether <see cref="Initialize"/> has been called and not since undone by <see cref="Deinitialize"/>.
+    /// Callers that rely on automatic invalidation (e.g. <c>CachedElementCollector</c>) should check this
+    /// before caching anything, since a cache that is never invalidated will silently return stale results
+    /// forever once the document changes.
+    /// </summary>
+    bool IsInitialized { get; }
+
+    /// <summary>
     /// Unsubscribes from Revit lifecycle events. Safe to call multiple times or before <see cref="Initialize"/>.
     /// </summary>
     void Deinitialize();
