@@ -30,11 +30,15 @@ in `Revit.TransactionMemoryCache.csproj`).
 - A BenchmarkDotNet suite (`benchmark/`) comparing cached vs. uncached
   queries.
 - `CachedElementCollector.OfCategories(IEnumerable<BuiltInCategory>)` and
-  `WhereParameterEquals(BuiltInParameter, int/string/ElementId)` - narrower,
-  value-keyable alternatives to the unsupported `WherePasses(ElementFilter)`.
-  `WhereParameterEquals` may be called any number of times per chain
-  (unlike the other fluent methods), each call narrowing the result further.
-  RTMC002 now also flags `OfCategory`/`OfCategories` conflicts.
+  `WhereParameterEquals(...)` - narrower, value-keyable alternatives to the
+  unsupported `WherePasses(ElementFilter)`. `WhereParameterEquals` may be
+  called any number of times per chain (unlike the other fluent methods),
+  each call narrowing the result further. RTMC002 now also flags
+  `OfCategory`/`OfCategories` conflicts.
+- `WhereParameterEquals` overloads for `double` (with an explicit required
+  `epsilon`) and for shared/project parameters (`ElementId parameterId`
+  instead of `BuiltInParameter`) - covers all four `Parameter.StorageType`
+  values and both built-in and non-built-in parameters.
 
 ### Changed
 

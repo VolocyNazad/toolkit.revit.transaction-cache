@@ -33,8 +33,11 @@ namespace Revit.TransactionMemoryCache.Services;
 /// filters would not produce the same cache key. Instead, a few narrower fluent wrappers are exposed for the
 /// most common filtering needs, whose parameters (categories, a <see cref="System.Type"/>, parameter
 /// values) *do* have proper value equality, so no such problem arises: <see cref="OfCategories"/> and
-/// <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/> (plus its <see cref="string"/>/
-/// <see cref="Autodesk.Revit.DB.ElementId"/> overloads). Unlike the once-only methods above,
+/// <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/> - overloaded for
+/// <see langword="int"/>/<see langword="string"/>/<see cref="Autodesk.Revit.DB.ElementId"/>/
+/// <see langword="double"/> (the last requires an explicit epsilon) values, and for both
+/// <see cref="Autodesk.Revit.DB.BuiltInParameter"/> and arbitrary shared/project parameters identified by
+/// their definition's <see cref="Autodesk.Revit.DB.ElementId"/>. Unlike the once-only methods above,
 /// <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/> may be called any number of
 /// times per chain - each call narrows the result further, mirroring how multiple
 /// <see cref="Autodesk.Revit.DB.FilteredElementCollector.WherePasses(Autodesk.Revit.DB.ElementFilter)"/> calls compose.
@@ -224,7 +227,7 @@ public sealed class CachedElementCollector
     /// </summary>
     public CachedElementCollector WhereParameterEquals(BuiltInParameter parameter, int value) =>
         WithParameterFilter(
-            parameter,
+            $"BuiltIn:{(int)parameter}",
             $"Int:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value));
 
@@ -238,7 +241,7 @@ public sealed class CachedElementCollector
         ArgumentNullException.ThrowIfNull(value);
 
         return WithParameterFilter(
-            parameter,
+            $"BuiltIn:{(int)parameter}",
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value, caseSensitive: false));
     }
@@ -255,14 +258,89 @@ public sealed class CachedElementCollector
         ArgumentNullException.ThrowIfNull(value);
 
         return WithParameterFilter(
-            parameter,
+            $"BuiltIn:{(int)parameter}",
             $"ElementId:{value.Value}",
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value));
     }
 
-    private CachedElementCollector WithParameterFilter(BuiltInParameter parameter, string valueFragment, FilterRule rule) =>
+    /// <summary>
+    /// <see langword="double"/> overload of <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/>.
+    /// Unlike the other overloads, requires an explicit <paramref name="epsilon"/> - exact <see langword="double"/>
+    /// equality is rarely what's intended, and Revit stores lengths/areas/angles in internal units, where a
+    /// "reasonable" tolerance depends on what the parameter actually measures, so no default is assumed.
+    /// </summary>
+    public CachedElementCollector WhereParameterEquals(BuiltInParameter parameter, double value, double epsilon) =>
+        WithParameterFilter(
+            $"BuiltIn:{(int)parameter}",
+            $"Double:{value}:{epsilon}",
+            ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value, epsilon));
+
+    /// <summary>
+    /// Shared/project-parameter overload of <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/> -
+    /// for parameters that have no <see cref="BuiltInParameter"/>, identified instead by their definition's
+    /// <paramref name="parameterId"/> (e.g. <c>SharedParameterElement.Id</c>). May be called any number of
+    /// times per chain, same as the <see cref="BuiltInParameter"/> overloads.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> is <see langword="null"/>.</exception>
+    public CachedElementCollector WhereParameterEquals(ElementId parameterId, int value)
+    {
+        ArgumentNullException.ThrowIfNull(parameterId);
+
+        return WithParameterFilter(
+            $"Id:{parameterId.Value}",
+            $"Int:{value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value));
+    }
+
+    /// <summary>
+    /// String overload of <see cref="WhereParameterEquals(Autodesk.Revit.DB.ElementId,int)"/> - the comparison is
+    /// case-insensitive, same as the <see cref="BuiltInParameter"/> overload.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> or <paramref name="value"/> is <see langword="null"/>.</exception>
+    public CachedElementCollector WhereParameterEquals(ElementId parameterId, string value)
+    {
+        ArgumentNullException.ThrowIfNull(parameterId);
+        ArgumentNullException.ThrowIfNull(value);
+
+        return WithParameterFilter(
+            $"Id:{parameterId.Value}",
+            $"String:{value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, caseSensitive: false));
+    }
+
+    /// <summary>
+    /// <see cref="Autodesk.Revit.DB.ElementId"/>-value overload of <see cref="WhereParameterEquals(Autodesk.Revit.DB.ElementId,int)"/>.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> or <paramref name="value"/> is <see langword="null"/>.</exception>
+    public CachedElementCollector WhereParameterEquals(ElementId parameterId, ElementId value)
+    {
+        ArgumentNullException.ThrowIfNull(parameterId);
+        ArgumentNullException.ThrowIfNull(value);
+
+        return WithParameterFilter(
+            $"Id:{parameterId.Value}",
+            $"ElementId:{value.Value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value));
+    }
+
+    /// <summary>
+    /// <see langword="double"/> overload of <see cref="WhereParameterEquals(Autodesk.Revit.DB.ElementId,int)"/> -
+    /// requires an explicit <paramref name="epsilon"/>, same as the <see cref="BuiltInParameter"/> overload.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException"><paramref name="parameterId"/> is <see langword="null"/>.</exception>
+    public CachedElementCollector WhereParameterEquals(ElementId parameterId, double value, double epsilon)
+    {
+        ArgumentNullException.ThrowIfNull(parameterId);
+
+        return WithParameterFilter(
+            $"Id:{parameterId.Value}",
+            $"Double:{value}:{epsilon}",
+            ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, epsilon));
+    }
+
+    private CachedElementCollector WithParameterFilter(string parameterKeyFragment, string valueFragment, FilterRule rule) =>
         With(
-            $"WhereParameterEquals:{(int)parameter}:{valueFragment}",
+            $"WhereParameterEquals:{parameterKeyFragment}:{valueFragment}",
             collector => collector.WherePasses(new ElementParameterFilter(rule)));
 
     /// <summary>

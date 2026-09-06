@@ -98,7 +98,10 @@ public sealed class MyService(ICachedElementCollectorFactory collectorFactory)
 - Результат `ToElements()`/`ToElementIds()` — **общий** для всех вызывающих с эквивалентной цепочкой. Не приводите его к изменяемому типу (`List<T>`, массив) и не мутируйте — это молча испортит закэшированное значение для всех остальных. Анализатор `RTMC001` (Warning) ловит такой каст на месте вызова и предлагает code fix — заменить на `.ToList()`/`.ToArray()` (создаёт копию).
 - `WherePasses(ElementFilter)` **намеренно не поддерживается** — у большинства подклассов `ElementFilter` нет надёжного value equality, чтобы строить по ним детерминированный ключ кэша. Вместо этого — узкие fluent-обёртки под конкретные value-типы параметров:
   - `OfCategories(IEnumerable<BuiltInCategory>)` — аналог `OfCategory`, но для нескольких категорий сразу (`ElementMulticategoryFilter`). Как и `OfCategory`, вызывается не более одного раза за цепочку, и конфликтует с `OfCategory` (это один и тот же "слот" под категорию).
-  - `WhereParameterEquals(BuiltInParameter, int/string/ElementId)` — фильтр по значению параметра (`ElementParameterFilter`/`ParameterFilterRuleFactory.CreateEqualsRule`). В отличие от остальных fluent-методов, **можно вызывать сколько угодно раз** за цепочку — каждый вызов сужает результат (аналогично нескольким `WherePasses` подряд на `FilteredElementCollector`). Строковое сравнение регистронезависимое.
+  - `WhereParameterEquals(BuiltInParameter, ...)` / `WhereParameterEquals(ElementId parameterId, ...)` — фильтр по значению параметра (`ElementParameterFilter`/`ParameterFilterRuleFactory.CreateEqualsRule`). В отличие от остальных fluent-методов, **можно вызывать сколько угодно раз** за цепочку — каждый вызов сужает результат (аналогично нескольким `WherePasses` подряд на `FilteredElementCollector`). Покрывает все 4 `Parameter.StorageType`:
+    - `int`, `string` (регистронезависимо), `ElementId` — без допущений;
+    - `double` — только с явным `epsilon` (`WhereParameterEquals(parameter, value, epsilon)`), т.к. точное сравнение `double` почти никогда не то, что нужно, а разумная погрешность зависит от единиц измерения параметра (длина/площадь/угол).
+    - Перегрузка с `ElementId parameterId` вместо `BuiltInParameter` — для shared/project-параметров, у которых нет `BuiltInParameter` (например, `SharedParameterElement.Id`).
 
 ## Известные ограничения
 

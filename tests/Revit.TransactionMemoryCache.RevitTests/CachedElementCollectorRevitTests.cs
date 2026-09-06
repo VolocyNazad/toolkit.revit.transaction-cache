@@ -138,6 +138,21 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
         await Assert.That(elementIds.Contains(_wall.Id)).IsTrue();
     }
 
+    /// <summary>
+    /// The wall is created 10 feet long (<c>Line.CreateBound(XYZ.Zero, new XYZ(10, 0, 0))</c> in
+    /// <see cref="CreateModel"/>), so its CURVE_ELEM_LENGTH parameter should read 10 (internal units = feet).
+    /// </summary>
+    [Test]
+    public async Task WhereParameterEquals_Double_FiltersToMatchingElement()
+    {
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .WhereParameterEquals(BuiltInParameter.CURVE_ELEM_LENGTH, 10.0, 0.01)
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsTrue();
+    }
+
     [Test]
     public async Task WhereElementIsElementType_ExcludesWallInstance()
     {
@@ -265,6 +280,15 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
 
         await AssertThrows<ArgumentNullException>(
             () => collector.WhereParameterEquals(BuiltInParameter.WALL_BASE_CONSTRAINT, (ElementId)null!)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task WhereParameterEquals_NullParameterId_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(
+            () => collector.WhereParameterEquals((ElementId)null!, 1)).ConfigureAwait(false);
     }
 
     [Test]
