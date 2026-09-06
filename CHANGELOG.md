@@ -8,6 +8,8 @@ in `Revit.TransactionMemoryCache.csproj`).
 
 ## [Unreleased]
 
+## [0.0.8] - 2026-09-06
+
 ### Added
 
 - `CachedElementCollector` - a fluent, cached alternative to
@@ -78,4 +80,5 @@ in `Revit.TransactionMemoryCache.csproj`).
   `Element.Document` is not always reference-stable against the `Document`
   used to query it. See README for details.
 
-[Unreleased]: https://github.com/VolocyNazad/toolkit.revit.transaction-cache/compare/0.0.7...HEAD
+[Unreleased]: https://github.com/VolocyNazad/toolkit.revit.transaction-cache/compare/0.0.8...HEAD
+[0.0.8]: https://github.com/VolocyNazad/toolkit.revit.transaction-cache/compare/0.0.7...0.0.8
