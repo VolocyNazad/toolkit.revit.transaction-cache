@@ -1,0 +1,16 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Release_2025.0.0" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="../src/Revit.TransactionMemoryCache/Revit.TransactionMemoryCache.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/Benchmarks/">
+    <Project Path="Benchmark/Benchmark.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+</Solution>
