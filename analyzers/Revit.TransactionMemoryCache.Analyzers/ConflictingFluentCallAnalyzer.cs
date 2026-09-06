@@ -9,8 +9,10 @@ namespace Revit.TransactionMemoryCache.Analyzers;
 
 /// <summary>
 /// RTMC002: flags a <c>CachedElementCollector</c> fluent call that conflicts with an earlier call already present
-/// in the same chain - <c>OfClass</c>/<c>Of&lt;T&gt;</c>, <c>OfCategory</c> and <c>Excluding</c> may each appear at
-/// most once, and <c>WhereElementIsElementType</c>/<c>WhereElementIsNotElementType</c> are mutually exclusive.
+/// in the same chain - <c>OfClass</c>/<c>Of&lt;T&gt;</c>, <c>OfCategory</c>/<c>OfCategories</c> and
+/// <c>Excluding</c> may each appear at most once, and <c>WhereElementIsElementType</c>/
+/// <c>WhereElementIsNotElementType</c> are mutually exclusive. <c>WhereParameterEquals</c> is intentionally
+/// not restricted - it may be called any number of times per chain.
 /// <c>CachedElementCollector</c> throws <see cref="InvalidOperationException"/> immediately when this
 /// happens at runtime, so this analyzer surfaces it at compile time instead.
 ///
@@ -29,6 +31,7 @@ public sealed class ConflictingFluentCallAnalyzer : DiagnosticAnalyzer
         ["OfClass"] = "OfClass",
         ["Of"] = "OfClass", // generic Of<TElement>() is sugar for OfClass(typeof(TElement))
         ["OfCategory"] = "OfCategory",
+        ["OfCategories"] = "OfCategory",
         ["Excluding"] = "Excluding",
         ["WhereElementIsElementType"] = "ElementTypeFilter",
         ["WhereElementIsNotElementType"] = "ElementTypeFilter",

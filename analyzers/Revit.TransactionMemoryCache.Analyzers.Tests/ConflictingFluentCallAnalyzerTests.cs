@@ -89,6 +89,69 @@ public class ConflictingFluentCallAnalyzerTests
     }
 
     [Fact]
+    public async Task OfCategory_ThenOfCategories_ReportsRtmc002()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using Revit.TransactionMemoryCache.Services;
+
+            class C
+            {
+                void M(CachedElementCollector collector)
+                {
+                    var chain = collector.OfCategory(1).OfCategories(new List<int> { 1, 2 });
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new ConflictingFluentCallAnalyzer(), source);
+
+        Assert.Contains(diagnostics, d => d.Id == "RTMC002");
+    }
+
+    [Fact]
+    public async Task DuplicateOfCategories_ReportsRtmc002()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using Revit.TransactionMemoryCache.Services;
+
+            class C
+            {
+                void M(CachedElementCollector collector)
+                {
+                    var chain = collector.OfCategories(new List<int> { 1 }).OfCategories(new List<int> { 2 });
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new ConflictingFluentCallAnalyzer(), source);
+
+        Assert.Contains(diagnostics, d => d.Id == "RTMC002");
+    }
+
+    /// <summary>Unlike OfClass/OfCategory/Excluding, WhereParameterEquals is intentionally unrestricted.</summary>
+    [Fact]
+    public async Task MultipleWhereParameterEquals_DoesNotReport()
+    {
+        const string source = """
+            using Revit.TransactionMemoryCache.Services;
+
+            class C
+            {
+                void M(CachedElementCollector collector)
+                {
+                    var chain = collector.WhereParameterEquals(1, 1).WhereParameterEquals(2, 2);
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new ConflictingFluentCallAnalyzer(), source);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "RTMC002");
+    }
+
+    [Fact]
     public async Task DifferentFilters_DoesNotReport()
     {
         const string source = """

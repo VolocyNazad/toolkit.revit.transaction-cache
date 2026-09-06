@@ -79,6 +79,66 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
     }
 
     [Test]
+    public async Task OfCategories_FiltersToMatchingCategoriesOnly()
+    {
+        var elementIds = CreateCollector()
+            .OfCategories([BuiltInCategory.OST_Walls, BuiltInCategory.OST_Levels])
+            .WhereElementIsNotElementType()
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsTrue();
+        await Assert.That(elementIds.Contains(_level!.Id)).IsTrue();
+    }
+
+    [Test]
+    public async Task WhereParameterEquals_String_FiltersToMatchingElement()
+    {
+        using (Transaction transaction = new(_document!, "Set comment"))
+        {
+            transaction.Start();
+            _wall!.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set("checked");
+            transaction.Commit();
+        }
+
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .WhereParameterEquals(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS, "checked")
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsTrue();
+    }
+
+    [Test]
+    public async Task WhereParameterEquals_ElementId_FiltersToMatchingElement()
+    {
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .WhereParameterEquals(BuiltInParameter.WALL_BASE_CONSTRAINT, _level!.Id)
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall!.Id)).IsTrue();
+    }
+
+    [Test]
+    public async Task WhereParameterEquals_CalledMultipleTimes_CombinesAsAnd()
+    {
+        using (Transaction transaction = new(_document!, "Set comment"))
+        {
+            transaction.Start();
+            _wall!.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set("checked");
+            transaction.Commit();
+        }
+
+        var elementIds = CreateCollector()
+            .OfClass(typeof(Wall))
+            .WhereParameterEquals(BuiltInParameter.WALL_BASE_CONSTRAINT, _level!.Id)
+            .WhereParameterEquals(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS, "checked")
+            .ToElementIds();
+
+        await Assert.That(elementIds.Contains(_wall.Id)).IsTrue();
+    }
+
+    [Test]
     public async Task WhereElementIsElementType_ExcludesWallInstance()
     {
         var elementIds = CreateCollector().OfClass(typeof(Wall)).WhereElementIsElementType().ToElementIds();
@@ -155,6 +215,56 @@ public sealed class CachedElementCollectorRevitTests : RevitApiTest
         var collector = CreateCollector().OfCategory(BuiltInCategory.OST_Walls);
 
         await AssertThrows<InvalidOperationException>(() => collector.OfCategory(BuiltInCategory.OST_Floors)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task OfCategories_CalledTwice_Throws()
+    {
+        var collector = CreateCollector().OfCategories([BuiltInCategory.OST_Walls]);
+
+        await AssertThrows<InvalidOperationException>(() => collector.OfCategories([BuiltInCategory.OST_Floors])).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task OfCategory_ThenOfCategories_Throws()
+    {
+        var collector = CreateCollector().OfCategory(BuiltInCategory.OST_Walls);
+
+        await AssertThrows<InvalidOperationException>(() => collector.OfCategories([BuiltInCategory.OST_Floors])).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task OfCategories_NullCategories_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(() => collector.OfCategories(null!)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task OfCategories_EmptyCategories_ThrowsArgumentException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentException>(() => collector.OfCategories([])).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task WhereParameterEquals_NullStringValue_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(
+            () => collector.WhereParameterEquals(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS, (string)null!)).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task WhereParameterEquals_NullElementIdValue_ThrowsArgumentNullException()
+    {
+        var collector = CreateCollector();
+
+        await AssertThrows<ArgumentNullException>(
+            () => collector.WhereParameterEquals(BuiltInParameter.WALL_BASE_CONSTRAINT, (ElementId)null!)).ConfigureAwait(false);
     }
 
     [Test]

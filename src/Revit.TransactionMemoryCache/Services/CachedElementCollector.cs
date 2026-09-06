@@ -30,7 +30,14 @@ namespace Revit.TransactionMemoryCache.Services;
 ///
 /// <c>WherePasses(ElementFilter)</c> is intentionally not supported: most <see cref="Autodesk.Revit.DB.ElementFilter"/>
 /// subclasses don't implement value equality, so two independently constructed but logically identical
-/// filters would not produce the same cache key.
+/// filters would not produce the same cache key. Instead, a few narrower fluent wrappers are exposed for the
+/// most common filtering needs, whose parameters (categories, a <see cref="System.Type"/>, parameter
+/// values) *do* have proper value equality, so no such problem arises: <see cref="OfCategories"/> and
+/// <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/> (plus its <see cref="string"/>/
+/// <see cref="Autodesk.Revit.DB.ElementId"/> overloads). Unlike the once-only methods above,
+/// <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/> may be called any number of
+/// times per chain - each call narrows the result further, mirroring how multiple
+/// <see cref="Autodesk.Revit.DB.FilteredElementCollector.WherePasses(Autodesk.Revit.DB.ElementFilter)"/> calls compose.
 ///
 /// The values returned by <see cref="ToElements"/>/<see cref="ToElementIds"/> are shared across every caller
 /// that hits the same cache entry - do not cast them to a mutable collection type and modify them, that would
@@ -98,16 +105,53 @@ public sealed class CachedElementCollector
         where TElement : Element =>
         OfClass(typeof(TElement));
 
-    /// <summary>Equivalent to <see cref="Autodesk.Revit.DB.FilteredElementCollector.OfCategory(Autodesk.Revit.DB.BuiltInCategory)"/>. May be called at most once.</summary>
-    /// <exception cref="System.InvalidOperationException"><see cref="OfCategory"/> has already been called on this chain.</exception>
+    /// <summary>
+    /// Equivalent to <see cref="Autodesk.Revit.DB.FilteredElementCollector.OfCategory(Autodesk.Revit.DB.BuiltInCategory)"/>.
+    /// May be called at most once, and not combined with <see cref="OfCategories"/> (both target categories -
+    /// use one or the other).
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException">
+    /// <see cref="OfCategory"/> or <see cref="OfCategories"/> has already been called on this chain.
+    /// </exception>
     public CachedElementCollector OfCategory(BuiltInCategory category)
     {
         if (_hasCategoryFilter)
-            throw new InvalidOperationException($"{nameof(OfCategory)} has already been called on this {nameof(CachedElementCollector)}.");
+            throw new InvalidOperationException(
+                $"{nameof(OfCategory)}/{nameof(OfCategories)} has already been called on this {nameof(CachedElementCollector)}.");
 
         return With(
             $"OfCategory:{category}",
             collector => collector.OfCategory(category),
+            hasCategoryFilter: true);
+    }
+
+    /// <summary>
+    /// Equivalent to <c>WherePasses(new ElementMulticategoryFilter(categories))</c> - filters to elements
+    /// belonging to any of <paramref name="categories"/>. May be called at most once, and not combined with
+    /// <see cref="OfCategory"/> (both target categories - use one or the other).
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException"><paramref name="categories"/> is <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentException"><paramref name="categories"/> is empty.</exception>
+    /// <exception cref="System.InvalidOperationException">
+    /// <see cref="OfCategory"/> or <see cref="OfCategories"/> has already been called on this chain.
+    /// </exception>
+    public CachedElementCollector OfCategories(IEnumerable<BuiltInCategory> categories)
+    {
+        ArgumentNullException.ThrowIfNull(categories);
+
+        var categoryList = categories.ToArray();
+        if (categoryList.Length == 0)
+            throw new ArgumentException("Must specify at least one category.", nameof(categories));
+
+        if (_hasCategoryFilter)
+            throw new InvalidOperationException(
+                $"{nameof(OfCategory)}/{nameof(OfCategories)} has already been called on this {nameof(CachedElementCollector)}.");
+
+        var sortedCategoryValues = categoryList.Select(category => (int)category).OrderBy(value => value);
+
+        return With(
+            $"OfCategories:{string.Join(",", sortedCategoryValues)}",
+            collector => collector.WherePasses(new ElementMulticategoryFilter(categoryList)),
             hasCategoryFilter: true);
     }
 
@@ -170,6 +214,56 @@ public sealed class CachedElementCollector
             collector => collector.Excluding(ids),
             hasExcluding: true);
     }
+
+    /// <summary>
+    /// Equivalent to <c>WherePasses(new ElementParameterFilter(ParameterFilterRuleFactory.CreateEqualsRule(...)))</c>
+    /// for the built-in integer-valued parameter <paramref name="parameter"/>. Unlike <see cref="OfClass"/>/
+    /// <see cref="OfCategory"/>/<see cref="OfCategories"/>, may be called any number of times per chain - each
+    /// call narrows the result further, matching how multiple
+    /// <see cref="Autodesk.Revit.DB.FilteredElementCollector.WherePasses(Autodesk.Revit.DB.ElementFilter)"/> calls compose.
+    /// </summary>
+    public CachedElementCollector WhereParameterEquals(BuiltInParameter parameter, int value) =>
+        WithParameterFilter(
+            parameter,
+            $"Int:{value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value));
+
+    /// <summary>
+    /// String overload of <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/> - the comparison is
+    /// case-insensitive. May be called any number of times per chain, same as the <see langword="int"/> overload.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    public CachedElementCollector WhereParameterEquals(BuiltInParameter parameter, string value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return WithParameterFilter(
+            parameter,
+            $"String:{value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value, caseSensitive: false));
+    }
+
+    /// <summary>
+    /// <see cref="Autodesk.Revit.DB.ElementId"/> overload of
+    /// <see cref="WhereParameterEquals(Autodesk.Revit.DB.BuiltInParameter,int)"/> - for parameters that reference
+    /// another element (e.g. a level/type). May be called any number of times per chain, same as the
+    /// <see langword="int"/> overload.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    public CachedElementCollector WhereParameterEquals(BuiltInParameter parameter, ElementId value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return WithParameterFilter(
+            parameter,
+            $"ElementId:{value.Value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value));
+    }
+
+    private CachedElementCollector WithParameterFilter(BuiltInParameter parameter, string valueFragment, FilterRule rule) =>
+        With(
+            $"WhereParameterEquals:{(int)parameter}:{valueFragment}",
+            collector => collector.WherePasses(new ElementParameterFilter(rule)));
 
     /// <summary>
     /// Equivalent to <see cref="Autodesk.Revit.DB.FilteredElementCollector.ToElements()"/>. On a cache hit, returns the same
