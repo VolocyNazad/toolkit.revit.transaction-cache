@@ -79,7 +79,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion)" />
-		<PackageReference Include="VolocyNazad.Revit.Context" Version="2025.0.9" />
+		<PackageReference Include="VolocyNazad.Revit.Context" Version="$(MajorRevitVersion).0.9" />
 		<PackageReference Include="MinVer" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
