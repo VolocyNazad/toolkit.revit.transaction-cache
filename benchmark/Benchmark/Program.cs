@@ -80,7 +80,7 @@ static void UpdateReadme(string benchmarkDirectory, string artifactsPath)
     ];
 
     var block = new StringBuilder();
-    block.Append(CultureInfo.InvariantCulture, $"_Обновлено: {DateTime.Now:yyyy-MM-dd HH:mm} (локальный запуск бенчмарков)._");
+    block.Append(CultureInfo.InvariantCulture, $"_Updated: {DateTime.Now:yyyy-MM-dd HH:mm} (local benchmark run)._");
     block.AppendLine();
     block.AppendLine();
 

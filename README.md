@@ -1,32 +1,32 @@
-﻿# Revit.Transaction-Cache
+# Revit.Transaction-Cache
 
-[![Revit 2011-2027](https://img.shields.io/badge/Revit-2011–2027-green.svg)](https://autodesk.com/revit)
+[![Revit 2021.1.9, 2023, 2025](https://img.shields.io/badge/Revit-2021.1.9%20%7C%202023%20%7C%202025-green.svg)](https://autodesk.com/revit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![VolocyNazad](https://img.shields.io/badge/VolocyNazad-blue.svg)](https://github.com/VolocyNazad)
 
-> Кэш значений в памяти, привязанный к жизненному циклу документа Revit.
+> An in-memory value cache bound to the lifecycle of a Revit document.
 
-Revit.TransactionMemoryCache — сервис мемоизации дорогих вычислений над Revit API с автоматическим сбросом кэша при изменении документа или переключении вида, с поддержкой DI-контейнеризации.
+Revit.TransactionMemoryCache — a memoization service for expensive Revit API computations, with automatic cache invalidation on document changes or view switches, and support for DI containerization.
 
-## Возможности
+## Features
 
-- `IRevitTransactionMemoryCache` — `GetOrCreate<TItem>(object key, Func<TItem> factory)`: возвращает закэшированное значение по ключу либо вычисляет его через `factory` и кэширует.
-- `IRevitTransactionMemoryCacheInitializer` — `Initialize()`/`Deinitialize()`: подписывает/отписывает кэш от событий `DocumentChanged` и `ViewActivated`, автоматически сбрасывая все закэшированные значения при их наступлении.
-- `RevitTransactionMemoryCache` — единственная реализация обоих интерфейсов поверх `IMemoryCache` и [`IRevitContext`](https://github.com/VolocyNazad/toolkit.revit.context).
-- Регистрация в DI одной строкой через `AddTransactionMemoryCache()`.
-- Потокобезопасный жизненный цикл (инициализация, сброс, `Dispose`).
-- `CachedElementCollector` — fluent-обёртка над `FilteredElementCollector` с автоматическим кэшированием результата (см. раздел ниже).
-- Два Roslyn-анализатора (`RTMC001`/`RTMC002`), подключаются автоматически вместе с пакетом.
+- `IRevitTransactionMemoryCache` — `GetOrCreate<TItem>(object key, Func<TItem> factory)`: returns the cached value for a key, or computes it via `factory` and caches it.
+- `IRevitTransactionMemoryCacheInitializer` — `Initialize()`/`Deinitialize()`: subscribes/unsubscribes the cache to the `DocumentChanged` and `ViewActivated` events, automatically clearing all cached values when they fire.
+- `RevitTransactionMemoryCache` — the single implementation of both interfaces on top of `IMemoryCache` and [`IRevitContext`](https://github.com/VolocyNazad/toolkit.revit.context).
+- One-line DI registration via `AddTransactionMemoryCache()`.
+- Thread-safe lifecycle (initialization, reset, `Dispose`).
+- `CachedElementCollector` — a fluent wrapper over `FilteredElementCollector` with automatic result caching (see the section below).
+- Two Roslyn analyzers (`RTMC001`/`RTMC002`), wired in automatically with the package.
 
-## Установка
+## Installation
 
 ```
 dotnet add package VolocyNazad.Revit.TransactionMemoryCache
 ```
 
-## Использование
+## Usage
 
-Регистрация сервисов в контейнере DI (требует также `VolocyNazad.Revit.Context`):
+Registering services in the DI container (also requires `VolocyNazad.Revit.Context`):
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -37,7 +37,7 @@ services.AddRevitContext();
 services.AddTransactionMemoryCache();
 ```
 
-Инициализация в `IExternalApplication.OnStartup` (после инициализации контекста):
+Initialization in `IExternalApplication.OnStartup` (after the context has been initialized):
 
 ```csharp
 using Autodesk.Revit.UI;
@@ -53,7 +53,7 @@ public Result OnStartup(UIControlledApplication application)
 }
 ```
 
-Использование кэша в любом сервисе:
+Using the cache in any service:
 
 ```csharp
 using Revit.TransactionMemoryCache.Abstractions.Services;
@@ -68,11 +68,11 @@ public sealed class MyService(IRevitTransactionMemoryCache cache)
 }
 ```
 
-Кэш автоматически сбрасывается при изменении документа (`DocumentChanged`) и при переключении активного вида (`ViewActivated`), поэтому повторный вызов `GetOrCreate` с тем же ключом после этих событий заново вычислит значение.
+The cache is automatically reset when the document changes (`DocumentChanged`) and when the active view is switched (`ViewActivated`), so calling `GetOrCreate` again with the same key after these events recomputes the value.
 
 ## CachedElementCollector
 
-Fluent-обёртка над `FilteredElementCollector`, но с автоматическим кэшированием результата в `IRevitTransactionMemoryCache`. Ничего не обращается к Revit API до терминального вызова (`ToElements()`/`ToElementIds()`) — до этого момента цепочка вызовов только собирает фрагменты будущего ключа кэша.
+A fluent wrapper over `FilteredElementCollector`, but with automatic result caching in `IRevitTransactionMemoryCache`. Nothing touches the Revit API until the terminal call (`ToElements()`/`ToElementIds()`) — up to that point, the call chain only accumulates the fragments of the future cache key.
 
 ```csharp
 using Revit.TransactionMemoryCache.Abstractions.Services;
@@ -81,7 +81,7 @@ public sealed class MyService(ICachedElementCollectorFactory collectorFactory)
 {
     public IReadOnlyList<Wall> GetWalls(Document doc) =>
         collectorFactory.Create(doc)
-            .OfClass(typeof(Wall)) // или .Of<Wall>()
+            .OfClass(typeof(Wall)) // or .Of<Wall>()
             .WhereElementIsNotElementType()
             .ToElements()
             .Cast<Wall>()
@@ -89,82 +89,82 @@ public sealed class MyService(ICachedElementCollectorFactory collectorFactory)
 }
 ```
 
-`ICachedElementCollectorFactory` резолвится через DI (регистрируется вместе с `AddTransactionMemoryCache()`) и бросает `InvalidOperationException`, если `IRevitTransactionMemoryCacheInitializer.Initialize()` ещё не вызывался — кэш без автоматической инвалидации молча отдавал бы устаревшие данные после изменения документа.
+`ICachedElementCollectorFactory` is resolved via DI (registered together with `AddTransactionMemoryCache()`) and throws `InvalidOperationException` if `IRevitTransactionMemoryCacheInitializer.Initialize()` has not been called yet — a cache without automatic invalidation would silently serve stale data after a document change.
 
-**Ключевые правила:**
+**Key rules:**
 
-- `OfClass`/`Of<T>`, `OfCategory`, `Excluding` можно вызвать **не более одного раза** за цепочку; `WhereElementIsElementType`/`WhereElementIsNotElementType` — взаимоисключающие. Нарушение бросает `InvalidOperationException` сразу же, не дожидаясь промаха кэша. Аналог этой проверки на этапе компиляции — анализатор `RTMC002` (Error).
-- `NotOfClass`/`NotOf<T>` — инвертированная версия `OfClass`/`Of<T>` (`ElementClassFilter` с `inverted: true`): элементы, **не относящиеся** к классу. Once-only между собой (свой "слот", отдельный от `OfClass`/`Of<T>`), но **можно комбинировать** с `OfClass`/`Of<T>` в одной цепочке — независимые quick-фильтры, как и с категориями.
-- Порядок fluent-вызовов **не влияет** на ключ кэша — фрагменты канонизируются (сортируются) перед склейкой, так что `OfClass(...).Excluding(...)` и `Excluding(...).OfClass(...)` — один и тот же ключ.
-- Результат `ToElements()`/`ToElementIds()` — **общий** для всех вызывающих с эквивалентной цепочкой. Не приводите его к изменяемому типу (`List<T>`, массив) и не мутируйте — это молча испортит закэшированное значение для всех остальных. Анализатор `RTMC001` (Warning) ловит такой каст на месте вызова и предлагает code fix — заменить на `.ToList()`/`.ToArray()` (создаёт копию).
-- `WherePasses(ElementFilter)` **намеренно не поддерживается** — у большинства подклассов `ElementFilter` нет надёжного value equality, чтобы строить по ним детерминированный ключ кэша. Вместо этого — узкие fluent-обёртки под конкретные value-типы параметров:
-  - `OfCategories(IEnumerable<BuiltInCategory>)` — аналог `OfCategory`, но для нескольких категорий сразу (`ElementMulticategoryFilter`). Как и `OfCategory`, вызывается не более одного раза за цепочку, и конфликтует с `OfCategory` (это один и тот же "слот" под категорию).
-  - `NotOfCategory(BuiltInCategory)` / `NotOfCategories(IEnumerable<BuiltInCategory>)` — инвертированные версии (`ElementCategoryFilter`/`ElementMulticategoryFilter` с `inverted: true`): элементы, **не принадлежащие** категории/категориям. Once-only между собой (свой "слот", отдельный от `OfCategory`/`OfCategories`), но **можно комбинировать** с `OfCategory`/`OfCategories` в одной цепочке — это независимые quick-фильтры, а не альтернативные способы выразить одно и то же.
-  - `WhereParameterEquals(BuiltInParameter, ...)` / `WhereParameterEquals(ElementId parameterId, ...)` — фильтр по значению параметра (`ElementParameterFilter`/`ParameterFilterRuleFactory.CreateEqualsRule`). В отличие от остальных fluent-методов, **можно вызывать сколько угодно раз** за цепочку — каждый вызов сужает результат (аналогично нескольким `WherePasses` подряд на `FilteredElementCollector`). Покрывает все 4 `Parameter.StorageType`:
-    - `int`, `string` (регистронезависимо), `ElementId` — без допущений;
-    - `double` — только с явным `epsilon` (`WhereParameterEquals(parameter, value, epsilon)`), т.к. точное сравнение `double` почти никогда не то, что нужно, а разумная погрешность зависит от единиц измерения параметра (длина/площадь/угол).
-    - Перегрузка с `ElementId parameterId` вместо `BuiltInParameter` — для shared/project-параметров, у которых нет `BuiltInParameter` (например, `SharedParameterElement.Id`).
-  - `WhereParameterNotEquals(...)` — те же перегрузки, что и `WhereParameterEquals`, но инвертированные (`ElementParameterFilter` с `inverted: true`). Так же не ограничен по числу вызовов.
-  - `WhereIsRoom()` / `WhereIsSpace()` — quick-фильтры `RoomFilter`/`SpaceFilter` (без параметров, поэтому и без проблем с value equality). Once-only каждый, но независимые "слоты" — можно скомбинировать оба в одной цепочке (результат при этом всегда пуст, но исключения не будет).
-  - `WhereBoundingBoxIntersects(XYZ min, XYZ max, double epsilon)` — единственный поддерживаемый геометрический фильтр (`BoundingBoxIntersectsFilter`/`Outline`). Сам фильтр на стороне Revit строится по точным координатам, но в ключ кэша каждая координата округляется до `epsilon` — иначе `XYZ` не даёт стабильного равенства для ключа. `epsilon` обязателен явно (по той же причине, что и у `double`-перегрузок `WhereParameterEquals`). Не ограничен по числу вызовов.
+- `OfClass`/`Of<T>`, `OfCategory`, `Excluding` may each be called **at most once** per chain; `WhereElementIsElementType`/`WhereElementIsNotElementType` are mutually exclusive. Violating this throws `InvalidOperationException` immediately, without waiting for a cache miss. The compile-time counterpart of this check is the `RTMC002` (Error) analyzer.
+- `NotOfClass`/`NotOf<T>` — the inverted version of `OfClass`/`Of<T>` (`ElementClassFilter` with `inverted: true`): elements that **do not** belong to the class. Once-only among themselves (their own "slot", separate from `OfClass`/`Of<T>`), but **can be combined** with `OfClass`/`Of<T>` in the same chain — independent quick filters, just like with categories.
+- The order of fluent calls **does not affect** the cache key — fragments are canonicalized (sorted) before being combined, so `OfClass(...).Excluding(...)` and `Excluding(...).OfClass(...)` produce the same key.
+- The result of `ToElements()`/`ToElementIds()` is **shared** across all callers with an equivalent chain. Do not cast it to a mutable type (`List<T>`, an array) or mutate it — that would silently corrupt the cached value for everyone else. The `RTMC001` (Warning) analyzer catches such a cast at the call site and offers a code fix — replace it with `.ToList()`/`.ToArray()` (which creates a copy).
+- `WherePasses(ElementFilter)` is **deliberately unsupported** — most `ElementFilter` subclasses lack reliable value equality, which is needed to build a deterministic cache key from them. Instead, there are narrow fluent wrappers for specific value-typed parameters:
+  - `OfCategories(IEnumerable<BuiltInCategory>)` — the counterpart to `OfCategory`, but for multiple categories at once (`ElementMulticategoryFilter`). Like `OfCategory`, it can be called at most once per chain, and conflicts with `OfCategory` (they share the same category "slot").
+  - `NotOfCategory(BuiltInCategory)` / `NotOfCategories(IEnumerable<BuiltInCategory>)` — the inverted versions (`ElementCategoryFilter`/`ElementMulticategoryFilter` with `inverted: true`): elements that **do not** belong to the category/categories. Once-only among themselves (their own "slot", separate from `OfCategory`/`OfCategories`), but **can be combined** with `OfCategory`/`OfCategories` in the same chain — these are independent quick filters, not alternative ways of expressing the same thing.
+  - `WhereParameterEquals(BuiltInParameter, ...)` / `WhereParameterEquals(ElementId parameterId, ...)` — a filter on a parameter value (`ElementParameterFilter`/`ParameterFilterRuleFactory.CreateEqualsRule`). Unlike the other fluent methods, this one **can be called any number of times** per chain — each call narrows the result (similar to chaining several `WherePasses` calls on `FilteredElementCollector`). It covers all 4 `Parameter.StorageType` values:
+    - `int`, `string` (case-insensitive), `ElementId` — no assumptions needed;
+    - `double` — only with an explicit `epsilon` (`WhereParameterEquals(parameter, value, epsilon)`), since exact `double` comparison is almost never what you want, and a sensible tolerance depends on the parameter's unit of measure (length/area/angle).
+    - The overload taking `ElementId parameterId` instead of `BuiltInParameter` is for shared/project parameters that have no `BuiltInParameter` (e.g. `SharedParameterElement.Id`).
+  - `WhereParameterNotEquals(...)` — the same overloads as `WhereParameterEquals`, but inverted (`ElementParameterFilter` with `inverted: true`). Also not limited in the number of calls.
+  - `WhereIsRoom()` / `WhereIsSpace()` — quick filters `RoomFilter`/`SpaceFilter` (no parameters, so no value-equality concerns either). Once-only each, but independent "slots" — both can be combined in the same chain (the result will always be empty, but no exception is thrown).
+  - `WhereBoundingBoxIntersects(XYZ min, XYZ max, double epsilon)` — the only supported geometric filter (`BoundingBoxIntersectsFilter`/`Outline`). The filter itself is built on the Revit side from exact coordinates, but each coordinate is rounded to `epsilon` for the cache key — otherwise `XYZ` provides no stable equality for a key. `epsilon` is required explicitly (for the same reason as the `double` overloads of `WhereParameterEquals`). Not limited in the number of calls.
 
-## Известные ограничения
+## Known limitations
 
-- **Инвалидация — глобальная для всех открытых документов, не по документу.** `IRevitTransactionMemoryCache` — единственный singleton-инстанс на процесс аддина (регистрируется через `AddTransactionMemoryCache()`); изоляция между документами обеспечивается не отдельными экземплярами кэша, а тем, что идентификатор документа зашит в сам ключ (`RuntimeHelpers.GetHashCode(document)` внутри `CachedElementCollectorKeyBuilder`/произвольных ключей через `GetOrCreate`). Но `RevitTransactionMemoryCache.Refresh()` сбрасывает **один общий** `CancellationTokenSource`, на который подписаны записи вообще всех документов — при `DocumentChanged`/`ViewActivated` в одном документе кэш **всех** одновременно открытых документов сбрасывается целиком, а не только изменившегося.
-  - Не приводит к устаревшим данным (это избыточная, а не недостаточная инвалидация), но снижает эффективность кэша при одновременной активной работе с несколькими открытыми документами.
-  - Планируется на будущее: сделать инвалидацию по-документно — например, партиционировать `CancellationTokenSource` по идентификатору документа из `DocumentChangedEventArgs`/активного `Document`, а не держать один общий токен на все записи.
+- **Invalidation is global across all open documents, not per document.** `IRevitTransactionMemoryCache` is the single singleton instance per add-in process (registered via `AddTransactionMemoryCache()`); isolation between documents is achieved not through separate cache instances, but because the document identifier is baked into the key itself (`RuntimeHelpers.GetHashCode(document)` inside `CachedElementCollectorKeyBuilder`/arbitrary keys via `GetOrCreate`). But `RevitTransactionMemoryCache.Refresh()` resets a **single shared** `CancellationTokenSource` that entries for *all* documents are subscribed to — on `DocumentChanged`/`ViewActivated` in one document, the cache for **all** currently open documents is cleared entirely, not just the one that changed.
+  - This does not cause stale data (it's over-invalidation, not under-invalidation), but it reduces cache effectiveness when working with several open documents at once.
+  - Planned for the future: make invalidation per document — for example, partitioning the `CancellationTokenSource` by the document identifier from `DocumentChangedEventArgs`/the active `Document`, instead of holding one shared token for all entries.
 
-- **Ключ `CachedElementCollector` завязан на конкретную ссылку на `Document`, а не на "логический" документ.** Ключ кэша использует `RuntimeHelpers.GetHashCode(document)` — идентичность управляемого объекта-обёртки, а не документа как такового. Эмпирически подтверждено (RevitTests): `Element.Document` может вернуть **другой** экземпляр обёртки, чем тот, что был передан в `FilteredElementCollector`/`ICachedElementCollectorFactory.Create(document)`. Практическое следствие: если получить `Document` для одного и того же открытого документа двумя разными путями (например, один раз через `UIDocument.Document`, другой раз — через `element.Document`) и передать в `Create(...)` оба варианта, кэш не переиспользуется между ними — не порча данных, а просто пропущенное попадание в кэш. Рекомендация до исправления: всегда прокидывать в `Create(document)` **одну и ту же** ссылку на `Document` (например, полученную один раз в начале команды), а не переполучать её из разных мест API.
-  - Планируется на будущее: заменить идентичность объекта на что-то стабильное на уровне логического документа (например, `Document.PathName`/`Document.Title` в сочетании с флагом "рабочий/несохранённый", если такой ключ окажется надёжнее ссылочной идентичности).
+- **The `CachedElementCollector` key is tied to a specific `Document` reference, not to the "logical" document.** The cache key uses `RuntimeHelpers.GetHashCode(document)` — the identity of the managed wrapper object, not of the document as such. Empirically confirmed (RevitTests): `Element.Document` can return a **different** wrapper instance than the one passed into `FilteredElementCollector`/`ICachedElementCollectorFactory.Create(document)`. Practical consequence: if you obtain the `Document` for the same open document through two different paths (e.g. once via `UIDocument.Document`, once via `element.Document`) and pass both into `Create(...)`, the cache is not reused between them — not data corruption, just a missed cache hit. Recommendation until this is fixed: always pass the **same** `Document` reference into `Create(document)` (e.g. one obtained once at the start of the command), rather than re-fetching it from different places in the API.
+  - Planned for the future: replace object identity with something stable at the logical-document level (e.g. `Document.PathName`/`Document.Title` combined with a "workshared/unsaved" flag, if such a key turns out to be more reliable than reference identity).
 
-## Поддерживаемые версии Revit
+## Supported Revit versions
 
-Пакет собирается под версии Revit 2011–2027 (см. конфигурации в `Revit.TransactionMemoryCache.csproj`), таргетируя `net48` для версий до 2025 и `net8.0-windows` для 2025+.
+The package is built and tested for Revit 2021.1.9, 2023.0.0, and 2025.0.0. Revit 2021 and 2023 target net48; Revit 2025 targets net8.0-windows.
 
-## Требования
+## Requirements
 
-- .NET SDK 10.0.103+ (см. `global.json`)
-- Revit API (пакет `Revit_All_Main_Versions_API_x64`)
+- .NET SDK 10.0.103+ (see `global.json`)
+- Revit API (the `Revit_All_Main_Versions_API_x64` package)
 - `VolocyNazad.Revit.Context`
 
-## Бенчмарки
+## Benchmarks
 
-Сравнение производительности `FilteredElementCollector`-запросов к БД Revit с кэшированием через
-`IRevitTransactionMemoryCache` и без него — см. `benchmark/`. Запускается вручную внутри живой сессии
-Revit (`Nice3point.BenchmarkDotNet.Revit`), поэтому не гоняется в CI.
+A performance comparison of `FilteredElementCollector` queries against the Revit database with and without caching via
+`IRevitTransactionMemoryCache` — see `benchmark/`. Run manually inside a live
+Revit session (`Nice3point.BenchmarkDotNet.Revit`), so it does not run in CI.
 
-`Light`/`Medium`/`Complex` — три уровня сложности `FilteredElementCollector`-запроса. Каждый прогоняется с параметром `CallsPerSession` (1/5/20/100) — сколько раз один и тот же запрос запрашивается подряд в рамках одной "транзакции", прежде чем документ изменится и кэш инвалидируется. `Uncached` всегда платит полную цену `CallsPerSession` раз; `Cached` использует свежий ключ на каждый замер, поэтому каждый раз платит ровно за один реальный промах плюс `CallsPerSession − 1` попаданий — так видно, как экономия растёт вместе с числом повторных обращений, а не только предельную стоимость одного уже тёплого hit.
+`Light`/`Medium`/`Complex` are three complexity levels of a `FilteredElementCollector` query. Each is run with the `CallsPerSession` parameter (1/5/20/100) — how many times the same query is requested in a row within a single "transaction", before the document changes and the cache is invalidated. `Uncached` always pays the full price `CallsPerSession` times; `Cached` uses a fresh key for each measurement, so each time it pays for exactly one real miss plus `CallsPerSession − 1` hits — this shows how the savings grow with the number of repeated accesses, not just the marginal cost of a single already-warm hit.
 
-### Вводные
+### Setup
 
-**Модель и данные**
-- Один новый проектный документ (`Application.NewProjectDocument(UnitSystem.Metric)`), создаётся заново для каждого класса/комбинации параметров.
-- **1000 стен** (`WallCount`), выстроенных в ряд на одном засеянном уровне, в одной транзакции (`OnGlobalSetup` в `CachingBenchmarksBase`).
+**Model and data**
+- One new project document (`Application.NewProjectDocument(UnitSystem.Metric)`), created fresh for each class/parameter combination.
+- **1000 walls** (`WallCount`), lined up on a single seeded level, in a single transaction (`OnGlobalSetup` in `CachingBenchmarksBase`).
 
-**Что именно запрашивает каждый уровень сложности**
+**What each complexity level actually queries**
 
-| Уровень | Запрос |
+| Level | Query |
 |---|---|
-| Light | `OfClass(typeof(Level))` — один дешёвый фильтр по классу, единственный засеянный уровень. |
-| Medium | `OfClass(typeof(Wall)).WhereElementIsNotElementType()` — все 1000 стен, только фильтрация по классу и не-типу. |
-| Complex | То же плюс `BoundingBoxIntersectsFilter`, затем в управляемом коде: чтение параметра `CURVE_ELEM_LENGTH` у каждой стены и сортировка по `Id` — трогает геометрию/параметры каждого элемента, а не только строку в таблице элементов. |
+| Light | `OfClass(typeof(Level))` — a single cheap class filter, the one seeded level. |
+| Medium | `OfClass(typeof(Wall)).WhereElementIsNotElementType()` — all 1000 walls, class and non-type filtering only. |
+| Complex | The same, plus `BoundingBoxIntersectsFilter`, then in managed code: reading the `CURVE_ELEM_LENGTH` parameter of each wall and sorting by `Id` — touches the geometry/parameters of each element, not just its row in the element table. |
 
-**Параметр сессии**
-- `CallsPerSession`: **1 / 3 / 5 / 10** — сколько раз подряд запрашивается один и тот же результат в рамках одной "транзакции" до инвалидации кэша (см. предыдущий абзац). Каждое значение — отдельная строка в отчёте (BenchmarkDotNet `[Params]`).
+**Session parameter**
+- `CallsPerSession`: **1 / 3 / 5 / 10** — how many times the same result is requested in a row within one "transaction" before the cache is invalidated (see the previous paragraph). Each value is a separate row in the report (BenchmarkDotNet `[Params]`).
 
-**Поведение кэша**
-- Кэш — реальный `RevitTransactionMemoryCache` из `src/`, собранный через `AddRevitContext()` + `AddTransactionMemoryCache()`, тот же путь, что и в проде.
-- `SlidingExpiration = 10 минут` на запись (см. `RevitTransactionMemoryCache.GetOrCreate`) — весь прогон занимает секунды, поэтому в рамках одного замера запись никогда не истекает сама по себе; единственный промах — тот, что мы намеренно создаём свежим ключом на каждый замер.
-- Инвалидация по `DocumentChanged`/`ViewActivated` в бенчмарке не участвует — `Initialize()` не вызывается, так как это требует `UIControlledApplication`, которого у хоста бенчмарка нет.
+**Cache behavior**
+- The cache is the real `RevitTransactionMemoryCache` from `src/`, wired up via `AddRevitContext()` + `AddTransactionMemoryCache()` — the same path as in production.
+- `SlidingExpiration = 10 minutes` per entry (see `RevitTransactionMemoryCache.GetOrCreate`) — the whole run takes seconds, so within a single measurement an entry never expires on its own; the only miss is the one we deliberately create with a fresh key for each measurement.
+- Invalidation via `DocumentChanged`/`ViewActivated` does not participate in the benchmark — `Initialize()` is not called, since it requires a `UIControlledApplication`, which the benchmark host does not have.
 
-**Конфигурация замера (BenchmarkDotNet)**
-- `Job.Default` — число вызовов на итерацию (`InvocationCount`), число итераций разминки/замера и т.д. не заданы вручную, движок калибрует их сам (см. ответ про Pilot-стадию выше).
-- `MemoryDiagnoser.Default` — включена колонка `Allocated`/`Alloc Ratio`.
-- Экспортёры: CSV (`-report.csv`), детальные замеры (`-measurements.csv`), JSON, GitHub-markdown (тот, что попадает сюда).
-- Таргет — конфигурация `Release_2025.0.0` (`net8.0-windows`, платформа x64); хост-машина/ОС/версия .NET SDK/BenchmarkDotNet фиксируются автоматически в шапке каждого отчёта ниже.
+**Measurement configuration (BenchmarkDotNet)**
+- `Job.Default` — the number of invocations per iteration (`InvocationCount`), the number of warm-up/measurement iterations, etc. are not set manually; the engine calibrates them itself (see the note about the Pilot stage above).
+- `MemoryDiagnoser.Default` — enables the `Allocated`/`Alloc Ratio` column.
+- Exporters: CSV (`-report.csv`), detailed measurements (`-measurements.csv`), JSON, GitHub markdown (the one that ends up here).
+- Target — the `Release_2025.0.0` configuration (`net8.0-windows`, x64 platform); the host machine/OS/.NET SDK version/BenchmarkDotNet version are recorded automatically in the header of each report below.
 
 <!-- benchmark-results:start -->
-_Обновлено: 2026-09-05 14:21 (локальный запуск бенчмарков)._
+_Updated: 2026-09-05 14:21 (local benchmark run)._
 
 ### Light
 
@@ -249,6 +249,14 @@ BuildConfiguration=Release_2025.0.0
 
 <!-- benchmark-results:end -->
 
-## Лицензия
+## License
 
-MIT, см. [LICENSE.md](LICENSE.md).
+MIT, see [LICENSE.md](LICENSE.md).
+
+## Development documentation
+
+- [Development policy](docs/policies/development.md)
+- [Repository guide and technology stack](docs/repository.md)
+
+## Contributing
+ [CONTRIBUTING.md](CONTRIBUTING.md) before submitting changes.

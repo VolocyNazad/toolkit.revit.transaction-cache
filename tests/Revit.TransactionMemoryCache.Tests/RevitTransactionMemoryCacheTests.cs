@@ -54,8 +54,8 @@ public class RevitTransactionMemoryCacheTests
         Assert.Throws<ObjectDisposedException>(() => cache.GetOrCreate("key", () => 1));
     }
 
-    [Fact(Skip = "Требует установленного Revit: подписка на события ControlledApplication/UIControlledApplication " +
-                 "заставляет CLR грузить RevitAPI/RevitAPIUI, а они не запускаются вне процесса/установки Revit.")]
+    [Fact(Skip = "Requires Revit to be installed: subscribing to ControlledApplication/UIControlledApplication events " +
+                 "forces the CLR to load RevitAPI/RevitAPIUI, which cannot run outside a Revit process/installation.")]
     public void Initialize_SubscribesToRevitEvents()
     {
     }
