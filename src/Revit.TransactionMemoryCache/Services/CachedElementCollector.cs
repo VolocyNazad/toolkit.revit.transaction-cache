@@ -375,6 +375,15 @@ public sealed class CachedElementCollector
         // configurable there), but this library also targets pre-2023 Revit versions where the
         // parameterless-case-sensitivity overload doesn't exist - kept deliberately, to preserve
         // documented case-insensitive behaviour across every supported version.
+        // Revit 2026 removed the 3-arg overload entirely; Autodesk's deprecation note points at
+        // the 2-arg overload as the replacement.
+#if AFTER2026
+        return WithParameterFilter(
+            nameof(WhereParameterEquals),
+            $"BuiltIn:{(int)parameter}",
+            $"String:{value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value));
+#else
 #pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterEquals),
@@ -382,6 +391,7 @@ public sealed class CachedElementCollector
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value, caseSensitive: false));
 #pragma warning restore CS0618
+#endif
     }
 
     /// <summary>
@@ -444,7 +454,14 @@ public sealed class CachedElementCollector
         ThrowHelper.ThrowIfNull(value);
 
         // See the BuiltInParameter string overload above for why the deprecated 3-arg overload is
-        // kept deliberately.
+        // kept deliberately (and why Revit 2026+ uses the 2-arg overload instead).
+#if AFTER2026
+        return WithParameterFilter(
+            nameof(WhereParameterEquals),
+            $"Id:{GetIdValue(parameterId)}",
+            $"String:{value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value));
+#else
 #pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterEquals),
@@ -452,6 +469,7 @@ public sealed class CachedElementCollector
             $"String:{value}",
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, caseSensitive: false));
 #pragma warning restore CS0618
+#endif
     }
 
     /// <summary>
@@ -509,7 +527,15 @@ public sealed class CachedElementCollector
         ThrowHelper.ThrowIfNull(value);
 
         // See the BuiltInParameter string overload of WhereParameterEquals for why the deprecated
-        // 3-arg overload is kept deliberately.
+        // 3-arg overload is kept deliberately (and why Revit 2026+ uses the 2-arg overload instead).
+#if AFTER2026
+        return WithParameterFilter(
+            nameof(WhereParameterNotEquals),
+            $"BuiltIn:{(int)parameter}",
+            $"String:{value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value),
+            inverted: true);
+#else
 #pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
@@ -518,6 +544,7 @@ public sealed class CachedElementCollector
             ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(parameter), value, caseSensitive: false),
             inverted: true);
 #pragma warning restore CS0618
+#endif
     }
 
     /// <summary>
@@ -577,7 +604,15 @@ public sealed class CachedElementCollector
         ThrowHelper.ThrowIfNull(value);
 
         // See the BuiltInParameter string overload of WhereParameterEquals for why the deprecated
-        // 3-arg overload is kept deliberately.
+        // 3-arg overload is kept deliberately (and why Revit 2026+ uses the 2-arg overload instead).
+#if AFTER2026
+        return WithParameterFilter(
+            nameof(WhereParameterNotEquals),
+            $"Id:{GetIdValue(parameterId)}",
+            $"String:{value}",
+            ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value),
+            inverted: true);
+#else
 #pragma warning disable CS0618
         return WithParameterFilter(
             nameof(WhereParameterNotEquals),
@@ -586,6 +621,7 @@ public sealed class CachedElementCollector
             ParameterFilterRuleFactory.CreateEqualsRule(parameterId, value, caseSensitive: false),
             inverted: true);
 #pragma warning restore CS0618
+#endif
     }
 
     /// <summary>

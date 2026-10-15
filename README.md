@@ -1,6 +1,6 @@
 # Revit.Transaction-Cache
 
-[![Revit 2021.1.9, 2023, 2025](https://img.shields.io/badge/Revit-2021.1.9%20%7C%202023%20%7C%202025-green.svg)](https://autodesk.com/revit)
+[![Revit 2021-2027](https://img.shields.io/badge/Revit-2021%20--%202027-green.svg)](https://autodesk.com/revit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![VolocyNazad](https://img.shields.io/badge/VolocyNazad-blue.svg)](https://github.com/VolocyNazad)
 
@@ -119,12 +119,12 @@ public sealed class MyService(ICachedElementCollectorFactory collectorFactory)
 
 ## Supported Revit versions
 
-The package is built and tested for Revit 2021.1.9, 2023.0.0, and 2025.0.0. Revit 2021 and 2023 target net48; Revit 2025 targets net8.0-windows.
+The package is built and tested for Revit 2021.1.100, 2022.1.80, 2023.1.90, 2024.3.60, 2025.4.60, 2026.4.10, and 2027.3.0. Revit 2021-2024 target net48; Revit 2025-2026 target net8.0-windows; Revit 2027 targets net10.0-windows.
 
 ## Requirements
 
 - .NET SDK 10.0.103+ (see `global.json`)
-- Revit API (the `Revit_All_Main_Versions_API_x64` package)
+- Revit API (packages `Nice3point.Revit.Api.RevitAPI` / `Nice3point.Revit.Api.RevitAPIUI`, floating `$(MajorRevitVersion).*`)
 - `VolocyNazad.Revit.Context`
 
 ## Benchmarks
@@ -161,7 +161,7 @@ Revit session (`Nice3point.BenchmarkDotNet.Revit`), so it does not run in CI.
 - `Job.Default` — the number of invocations per iteration (`InvocationCount`), the number of warm-up/measurement iterations, etc. are not set manually; the engine calibrates them itself (see the note about the Pilot stage above).
 - `MemoryDiagnoser.Default` — enables the `Allocated`/`Alloc Ratio` column.
 - Exporters: CSV (`-report.csv`), detailed measurements (`-measurements.csv`), JSON, GitHub markdown (the one that ends up here).
-- Target — the `Release_2025.0.0` configuration (`net8.0-windows`, x64 platform); the host machine/OS/.NET SDK version/BenchmarkDotNet version are recorded automatically in the header of each report below.
+- Target — the `Release_2025.4.60` configuration (`net8.0-windows`, x64 platform); the host machine/OS/.NET SDK version/BenchmarkDotNet version are recorded automatically in the header of each report below.
 
 <!-- benchmark-results:start -->
 _Updated: 2026-09-05 14:21 (local benchmark run)._
