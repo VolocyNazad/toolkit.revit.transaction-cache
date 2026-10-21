@@ -1,0 +1,29 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+    <CentralRevitVersion Condition="$(Configuration.Contains('_'))">$(Configuration.Split('_')[1])</CentralRevitVersion>
+    <CentralRevitMajor Condition="'$(CentralRevitVersion)' != ''">$(CentralRevitVersion.Split('.')[0])</CentralRevitMajor>
+  </PropertyGroup>
+  <ItemGroup>
+    <GlobalPackageReference Include="MinVer" Version="8.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="AutoConstructor" Version="5.6.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="Nice3point.BenchmarkDotNet.Revit" Version="$(CentralRevitMajor).1.0" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPI" Version="$(CentralRevitVersion)" />
+    <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(CentralRevitVersion)" />
+    <PackageVersion Include="PolySharp" Version="1.16.0" />
+    <PackageVersion Include="VolocyNazad.Revit.Context" Version="$(CentralRevitMajor).0.10" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+  </ItemGroup>
+</Project>

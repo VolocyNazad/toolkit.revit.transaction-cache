@@ -55,4 +55,6 @@ Distributed analyzers and source generators target Microsoft.CodeAnalysis 4.14, 
 
 ## Package version management
 
-A repository may use central package management or explicit versions in project files. Use one active approach within a repository, remove empty or disabled central package files, and keep versions aligned between projects that serve the same role.
+Use central package management: declare runtime, build, analyzer and shared test package versions in the root `Directory.Packages.props`, and project-specific test packages in `tests/Directory.Packages.props`, which imports the root file. Keep `MinVer` as a `GlobalPackageReference`; source generators remain local `PackageReference` items with their version in the central file. Do not put versions on `PackageReference` items except through an explicit, documented exception.
+
+The Revit API packages are versioned by the selected build configuration: `Release_2026.4.10` and `Debug_2026.4.10` both resolve `Nice3point.Revit.Api.*` version `2026.4.10`, `VolocyNazad.Revit.Context` uses the Revit major version (`2026.0.10`), and the benchmark tooling uses `<Revit major>.1.0`. The central file derives these values from `Configuration` because the SDK sets `MajorRevitVersion` after the central file is evaluated. `Nice3point.TUnit.Revit` is versioned per Revit major version and is pinned in `tests/Directory.Packages.props`. Keep the configurations and the supported-version matrix in sync.

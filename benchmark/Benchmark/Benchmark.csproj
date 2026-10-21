@@ -11,8 +11,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(MajorRevitVersion).*" />
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(MajorRevitVersion).*" />
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" />
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" />
         <PackageReference Include="Nice3point.BenchmarkDotNet.Revit" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     </ItemGroup>

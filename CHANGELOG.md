@@ -4,9 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project's versions are `MajorRevitVersion.0.Patch` (see MinVer usage
-in `Revit.TransactionMemoryCache.csproj`).
+in `Directory.Packages.props`).
 
 ## [Unreleased]
+
+### Changed
+
+- Moved package versions to central package management (`Directory.Packages.props` and `tests/Directory.Packages.props`); Revit API, sibling package, and benchmark tooling versions follow the selected build configuration.
+- Benchmarks now use the supported `Release_2025.4.60` configuration and the centrally managed `Microsoft.Extensions.DependencyInjection` version.
 
 ## [0.0.10] - 2026-10-15
 

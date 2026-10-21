@@ -1,0 +1,10 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Packages.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <Nice3pointTUnitVersion Condition="'$(CentralRevitMajor)' == '2027'">2027.0.7</Nice3pointTUnitVersion>
+    <Nice3pointTUnitVersion Condition="'$(Nice3pointTUnitVersion)' == '' and '$(CentralRevitMajor)' != ''">$(CentralRevitMajor).1.7</Nice3pointTUnitVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Nice3point.TUnit.Revit" Version="$(Nice3pointTUnitVersion)" />
+  </ItemGroup>
+</Project>

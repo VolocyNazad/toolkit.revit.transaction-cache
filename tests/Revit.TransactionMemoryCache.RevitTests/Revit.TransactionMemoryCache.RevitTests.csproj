@@ -14,7 +14,7 @@
 		</Configurations>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Nice3point.TUnit.Revit" Version="$(MajorRevitVersion).*" />
+		<PackageReference Include="Nice3point.TUnit.Revit" />
 		<!--
 			Needed on net48-era target frameworks: TUnit's source generator emits a
 			[ModuleInitializer]-attributed method into THIS project, so this project needs its own
@@ -22,7 +22,7 @@
 			reuse the one Revit.TransactionMemoryCache.csproj generates for itself via ProjectReference,
 			that one is internal to that assembly and inaccessible here (CS0122).
 		-->
-		<PackageReference Include="PolySharp" Version="1.16.0">
+		<PackageReference Include="PolySharp">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

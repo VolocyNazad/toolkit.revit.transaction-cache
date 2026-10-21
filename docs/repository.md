@@ -59,8 +59,8 @@ repo `toolkit.revit.context`).
 ## Tech stack
 
 - .NET, built against `Nice3point.Revit.Api.RevitAPI` /
-  `Nice3point.Revit.Api.RevitAPIUI` (floating `$(MajorRevitVersion).*`, so each
-  major resolves to its latest stable API patch)
+  `Nice3point.Revit.Api.RevitAPIUI`; the package version follows the selected
+  build configuration (for example `Release_2026.4.10` uses `2026.4.10`)
 - VolocyNazad.Revit.Context (sibling package)
 - AutoConstructor (source-generated DI constructors)
 - Microsoft.Extensions.Caching.Memory,
@@ -102,9 +102,11 @@ repo `toolkit.revit.context`).
   matching, so `CachedElementCollector`'s public surface is duplicated as
   a plain stand-in class in the analyzer tests instead of referencing the
   real (Revit-API-dependent) assembly.
-- Central package management is not used; package versions are set per
-  `<PackageReference>`.
-- Benchmarks (`benchmark/`): Nice3point.BenchmarkDotNet.Revit (runs BenchmarkDotNet in-process inside a real Revit session, since `FilteredElementCollector` needs a live `Document`) - separate `.slnx`, single `Release_2025.0.0`/net8.0-windows configuration, same pattern as `revit.linter`'s `benchmark/`
+- Package versions are managed centrally in `Directory.Packages.props`. Headless
+  test packages are also declared there because the analyzer tests live under
+  `analyzers/`; `tests/Directory.Packages.props` adds the Revit-major-specific
+  `Nice3point.TUnit.Revit` version.
+- Benchmarks (`benchmark/`): Nice3point.BenchmarkDotNet.Revit (runs BenchmarkDotNet in-process inside a real Revit session, since `FilteredElementCollector` needs a live `Document`) - separate `.slnx`, single `Release_2025.4.60`/net8.0-windows configuration, same pattern as `revit.linter`'s `benchmark/`
 
 ## Documentation layout
 

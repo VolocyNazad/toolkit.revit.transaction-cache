@@ -23,6 +23,7 @@
     <File Path="CHANGELOG.md" />
     <File Path="CONTRIBUTING.md" />
     <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
     <File Path="global.json" />
     <File Path="LICENSE.md" />
     <File Path="README.md" />
@@ -30,6 +31,7 @@
     <File Path=".editorconfig" />
   </Folder>
   <Folder Name="/tests/">
+    <File Path="tests/Directory.Packages.props" />
     <Project Path="tests/Revit.TransactionMemoryCache.Tests/Revit.TransactionMemoryCache.Tests.csproj">
       <Platform Project="x64" />
     </Project>
