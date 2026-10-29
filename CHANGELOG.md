@@ -14,6 +14,8 @@ in `Directory.Packages.props`).
 
 ### Changed
 
+- Move the commit message policy to `docs/policies/commits.md` and require it in the repository validator.
+
 - Document the commit message policy: the Conventional Commits type set, breaking-change markers and subject rules.
 
 - Moved package versions to central package management (`Directory.Packages.props` and `tests/Directory.Packages.props`); Revit API, sibling package, and benchmark tooling versions follow the selected build configuration.
