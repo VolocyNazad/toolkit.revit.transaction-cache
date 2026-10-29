@@ -14,6 +14,8 @@ in `Directory.Packages.props`).
 
 ### Changed
 
+- Document the commit message policy: the Conventional Commits type set, breaking-change markers and subject rules.
+
 - Moved package versions to central package management (`Directory.Packages.props` and `tests/Directory.Packages.props`); Revit API, sibling package, and benchmark tooling versions follow the selected build configuration.
 - Benchmarks now use the supported `Release_2025.4.60` configuration and the centrally managed `Microsoft.Extensions.DependencyInjection` version.
 
