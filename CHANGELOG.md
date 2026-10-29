@@ -8,6 +8,10 @@ in `Directory.Packages.props`).
 
 ## [Unreleased]
 
+### Added
+
+- Branching policy: `main` holds the released state, `dev` integrates the next release, and changes arrive through feature, fix, release and hotfix branches.
+
 ### Changed
 
 - Moved package versions to central package management (`Directory.Packages.props` and `tests/Directory.Packages.props`); Revit API, sibling package, and benchmark tooling versions follow the selected build configuration.
