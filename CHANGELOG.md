@@ -8,24 +8,6 @@ in `Directory.Packages.props`).
 
 ## [Unreleased]
 
-### Added
-
-- Add a testing policy: test kinds, Revit version coverage, naming, isolation and the manual smoke check.
-- Add a benchmark policy: when performance is measured, how, and how results are reported.
-
-- Branching policy: `main` holds the released state, `dev` integrates the next release, and changes arrive through feature, fix, release and hotfix branches.
-
-### Changed
-
-- Move the changelog policy to `docs/policies/changelog.md` and require it in the repository validator.
-
-- Move the commit message policy to `docs/policies/commits.md` and require it in the repository validator.
-
-- Document the commit message policy: the Conventional Commits type set, breaking-change markers and subject rules.
-
-- Moved package versions to central package management (`Directory.Packages.props` and `tests/Directory.Packages.props`); Revit API, sibling package, and benchmark tooling versions follow the selected build configuration.
-- Benchmarks now use the supported `Release_2025.4.60` configuration and the centrally managed `Microsoft.Extensions.DependencyInjection` version.
-
 ## [0.0.10] - 2026-10-15
 
 ### Added
