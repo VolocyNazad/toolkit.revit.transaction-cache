@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
@@ -27,7 +27,7 @@ namespace Revit.TransactionMemoryCache.RevitTests;
 /// </summary>
 [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores",
     Justification = "xUnit test naming convention: MethodName_Scenario_ExpectedResult.")]
-public sealed class CachedElementCollectorRevitTests : RevitApiTest
+internal sealed class CachedElementCollectorRevitTests : RevitApiTest
 {
     private Document? _document;
     private Wall? _wall;
